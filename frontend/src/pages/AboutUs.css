@@ -1,0 +1,471 @@
+/* ===== ABOUT US PAGE STYLING ===== */
+/* This file styles the About Us page */
+
+.about-us-page {
+  width: 100%;
+  min-height: 100vh;
+  background: transparent; /* match app gradient background */
+  padding: 4rem 0;
+}
+
+/* ===== HEADER SECTION ===== */
+.about-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.about-header h1 {
+  font-size: 42px;
+  margin: 0 0 10px 0;
+  font-weight: bold;
+}
+
+.about-header p {
+  font-size: 18px;
+  margin: 0;
+  opacity: 0.9;
+}
+
+/* ===== OUR STORY SECTION ===== */
+.our-story {
+  padding: 60px 40px;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(8px);
+  border-radius: 18px;
+  margin: 1.5rem auto;
+  max-width: 1200px;
+}
+
+.story-content {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.story-text {
+  flex: 1;
+}
+
+.story-text h2 {
+  font-size: 36px;
+  margin: 0 0 20px 0;
+  color: #333;
+}
+
+.story-text p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #666;
+  margin: 0 0 15px 0;
+}
+
+.story-image {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.image-placeholder {
+  font-size: 150px;
+  background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+  width: 300px;
+  height: 300px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== MISSION & VISION SECTION ===== */
+.mission-vision {
+  padding: 60px 40px;
+  background: rgba(255,255,255,0.04);
+  margin: 1.5rem auto;
+  border-radius: 18px;
+  max-width: 1200px;
+}
+
+.mission-vision h2 {
+  font-size: 36px;
+  text-align: center;
+  margin: 0 0 50px 0;
+  color: #333;
+}
+
+.mission-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.mission-card {
+  background: rgba(255,255,255,0.06);
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(31,38,135,0.06);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(6px);
+}
+
+.mission-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.mission-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+}
+
+.mission-card h3 {
+  font-size: 26px;
+  margin: 0 0 15px 0;
+  color: #333;
+}
+
+.mission-card p {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #666;
+  margin: 0;
+}
+
+/* ===== OUR VALUES SECTION ===== */
+.our-values {
+  padding: 60px 40px;
+  background: rgba(255,255,255,0.04);
+  margin: 1.5rem auto;
+  border-radius: 18px;
+  max-width: 1200px;
+}
+
+.our-values h2 {
+  font-size: 36px;
+  text-align: center;
+  margin: 0 0 50px 0;
+  color: #333;
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 25px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.value-card {
+  background: rgba(255,255,255,0.05);
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(6px);
+}
+
+.value-card:hover {
+  transform: translateY(-5px);
+}
+
+.value-icon {
+  font-size: 50px;
+  margin-bottom: 15px;
+}
+
+.value-card h3 {
+  font-size: 20px;
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.value-card p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #666;
+  margin: 0;
+}
+
+/* ===== OUR TEAM SECTION ===== */
+.our-team {
+  padding: 60px 40px;
+  background: rgba(255,255,255,0.04);
+  margin: 1.5rem auto;
+  border-radius: 18px;
+  max-width: 1200px;
+}
+
+.our-team h2 {
+  font-size: 36px;
+  text-align: center;
+  margin: 0 0 15px 0;
+  color: #333;
+}
+
+.team-intro {
+  font-size: 16px;
+  text-align: center;
+  color: #666;
+  margin: 0 0 40px 0;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.team-member {
+  background: rgba(255,255,255,0.05);
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(31,38,135,0.06);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.04);
+  backdrop-filter: blur(6px);
+}
+
+.team-member:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.member-avatar {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 15px auto;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.1);
+  border: 2px solid #667eea;
+}
+
+.member-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.member-avatar-placeholder {
+  font-size: 60px;
+}
+
+.team-loading, .team-empty {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-style: italic;
+  font-size: 18px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 12px;
+}
+
+.team-member h3 {
+  font-size: 22px;
+  margin: 0 0 5px 0;
+  color: #333;
+}
+
+.member-role {
+  font-size: 14px;
+  color: #667eea;
+  font-weight: bold;
+  margin: 0 0 10px 0;
+}
+
+.member-bio {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ===== WHY CHOOSE US SECTION ===== */
+.why-choose-section {
+  padding: 60px 40px;
+  background: rgba(255,255,255,0.03);
+  margin: 1.5rem auto;
+  border-radius: 18px;
+  max-width: 1200px;
+}
+
+.why-choose-section h2 {
+  font-size: 36px;
+  text-align: center;
+  margin: 0 0 50px 0;
+  color: #333;
+}
+
+.reasons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.reason {
+  padding: 30px;
+  border-left: 4px solid #667eea;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+.reason:hover {
+  background: rgba(255,255,255,0.06);
+  border-left-color: #764ba2;
+}
+
+.reason-number {
+  font-size: 32px;
+  font-weight: bold;
+  color: #667eea;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.reason h3 {
+  font-size: 20px;
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.reason p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ===== TESTIMONIALS SECTION ===== */
+.testimonials-section {
+  padding: 60px 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.testimonials-section h2 {
+  font-size: 36px;
+  text-align: center;
+  margin: 0 0 50px 0;
+}
+
+.testimonials-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.testimonial {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 30px;
+  border-radius: 12px;
+  border-left: 4px solid white;
+  backdrop-filter: blur(10px);
+}
+
+.testimonial-quote {
+  font-size: 15px;
+  line-height: 1.8;
+  margin: 0 0 15px 0;
+  font-style: italic;
+}
+
+.testimonial-author {
+  font-size: 14px;
+  margin: 0;
+  font-weight: bold;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .about-header {
+    padding: 40px 20px;
+  }
+
+  .about-header h1 {
+    font-size: 32px;
+  }
+
+  .our-story,
+  .mission-vision,
+  .our-values,
+  .our-team,
+  .why-choose-section,
+  .testimonials-section {
+    padding: 40px 20px;
+  }
+
+  .story-content {
+    flex-direction: column;
+    gap: 30px;
+  }
+
+  .image-placeholder {
+    width: 200px;
+    height: 200px;
+    font-size: 100px;
+  }
+
+  .mission-grid,
+  .values-grid,
+  .team-grid,
+  .reasons-grid,
+  .testimonials-container {
+    grid-template-columns: 1fr;
+  }
+
+  .story-text h2,
+  .mission-vision h2,
+  .our-values h2,
+  .our-team h2,
+  .why-choose-section h2,
+  .testimonials-section h2 {
+    font-size: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-header h1 {
+    font-size: 24px;
+  }
+
+  .about-header p {
+    font-size: 14px;
+  }
+
+  .story-text h2,
+  .mission-vision h2,
+  .our-values h2,
+  .our-team h2,
+  .why-choose-section h2,
+  .testimonials-section h2 {
+    font-size: 22px;
+  }
+
+  .mission-card,
+  .value-card,
+  .team-member,
+  .reason,
+  .testimonial {
+    padding: 20px;
+  }
+}

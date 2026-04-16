@@ -1,0 +1,755 @@
+/* ===== HOME PAGE STYLING ===== */
+/* This file contains all the styling for the home/dashboard page */
+/* Think of it like decorating a room - colors, sizes, spacing, etc. */
+
+/* ===== MAIN CONTAINER ===== */
+.home-container {
+  /* Full height and width of the screen */
+  min-height: 100vh;
+  
+  /* Gradient background - smooth color transition */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  /* Padding: space inside the container from edges */
+  padding: 20px;
+  
+  /* Font styling */
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+}
+
+/* ===== HEADER SECTION ===== */
+.home-header {
+  /* Centered alignment */
+  text-align: center;
+  
+  /* Space below the header */
+  margin-bottom: 40px;
+  
+  /* Padding inside the header */
+  padding: 30px 20px;
+  
+  /* Semi-transparent white background */
+  background: rgba(255, 255, 255, 0.95);
+  
+  /* Rounded corners */
+  border-radius: 15px;
+  
+  /* Shadow effect for depth */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.home-header h1 {
+  /* Large title */
+  font-size: 2.5rem;
+  
+  /* Space below title */
+  margin: 0 0 10px 0;
+  
+  /* Dark color */
+  color: #667eea;
+  
+  /* Font styling */
+  font-weight: 700;
+}
+
+.home-header p {
+  /* Subtitle styling */
+  font-size: 1rem;
+  
+  /* Light gray color */
+  color: #999;
+  
+  /* No margin */
+  margin: 0;
+}
+
+/* ===== MAIN CONTENT ===== */
+.home-content {
+  /* Maximum width for better readability */
+  max-width: 1000px;
+  
+  /* Center horizontally */
+  margin: 0 auto;
+  
+  /* Space between sections */
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* ===== PROFILE CARD ===== */
+.profile-card {
+  /* White background */
+  background: white;
+  
+  /* Rounded corners */
+  border-radius: 20px;
+  
+  /* Padding inside */
+  padding: 30px;
+  
+  /* Shadow for depth */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  
+  /* Smooth transitions when hovering */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* When user hovers over profile card, lift it up */
+.profile-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== PROFILE HEADER (with avatar) ===== */
+.profile-header {
+  /* Flex layout to arrange items horizontally */
+  display: flex;
+  
+  /* Space between items */
+  align-items: center;
+  gap: 20px;
+  
+  /* Space below this section */
+  margin-bottom: 30px;
+  
+  /* Padding below */
+  padding-bottom: 30px;
+  
+  /* Line below this section */
+  border-bottom: 2px solid #f0f0f0;
+}
+
+/* ===== AVATAR (User's initial) ===== */
+.avatar {
+  /* Size of avatar circle */
+  width: 80px;
+  height: 80px;
+  
+  /* Make it circular */
+  border-radius: 50%;
+  
+  /* Gradient background */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  /* Center the text inside */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Font styling */
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  
+  /* Smooth shadow */
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.profile-title h2 {
+  /* Title styling */
+  font-size: 1.5rem;
+  margin: 0 0 5px 0;
+  color: #333;
+}
+
+.profile-title p {
+  /* Subtitle under title */
+  margin: 0;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+/* ===== PROFILE INFO (User details) ===== */
+.profile-info {
+  /* Space below info section */
+  margin-bottom: 30px;
+}
+
+.info-item {
+  /* Spacing between each info item */
+  display: flex;
+  justify-content: space-between;
+  
+  /* Vertical padding */
+  padding: 15px 0;
+  
+  /* Line between items */
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-item label {
+  /* Label styling */
+  font-weight: 600;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.info-item span {
+  /* Value styling */
+  color: #333;
+  font-weight: 500;
+}
+
+/* ===== ROLE BADGE ===== */
+.role-badge {
+  /* Special styling for role/account type */
+  background: #e3f2fd;
+  color: #667eea;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.profile-actions {
+  /* Arrange buttons horizontally */
+  display: flex;
+  gap: 15px;
+}
+
+/* Common button styling */
+.profile-actions button {
+  /* Fill half the width */
+  flex: 1;
+  
+  /* Padding inside button */
+  padding: 12px 20px;
+  
+  /* Rounded corners */
+  border-radius: 10px;
+  
+  /* No border */
+  border: none;
+  
+  /* Font styling */
+  font-size: 1rem;
+  font-weight: 600;
+  
+  /* Cursor changes to hand when hovering */
+  cursor: pointer;
+  
+  /* Smooth transition for effects */
+  transition: all 0.3s ease;
+}
+
+/* Edit Profile button styling */
+.btn-edit {
+  /* Light purple background */
+  background: #e3f2fd;
+  color: #667eea;
+}
+
+.btn-edit:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Logout button styling */
+.btn-logout {
+  /* Light red background */
+  background: #ffebee;
+  color: #e74c3c;
+}
+
+.btn-logout:hover {
+  background: #e74c3c;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* ===== LOADING AND ERROR MESSAGES ===== */
+.loading-message,
+.error-box {
+  /* Center on screen */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Full screen height */
+  height: 100vh;
+}
+
+.loading-message h2,
+.error-box h2 {
+  /* Large text */
+  font-size: 1.5rem;
+  color: white;
+}
+
+.error-box {
+  /* Flex column for vertical layout */
+  flex-direction: column;
+  gap: 20px;
+}
+
+.error-box p {
+  /* Light text for error box */
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ===== MY BOOKINGS SECTION ===== */
+.bookings-section {
+  /* White background */
+  background: white;
+  
+  /* Rounded corners */
+  border-radius: 20px;
+  
+  /* Padding inside */
+  padding: 30px;
+  
+  /* Shadow */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  
+  /* Space below section */
+  margin-bottom: 30px;
+}
+
+.bookings-section h3 {
+  /* Title styling */
+  font-size: 1.3rem;
+  margin: 0 0 25px 0;
+  color: #333;
+}
+
+/* No bookings message styling */
+.no-bookings {
+  /* Center content */
+  text-align: center;
+  
+  /* Padding */
+  padding: 40px 20px;
+  
+  /* Light gray background */
+  background: #f9f9f9;
+  
+  /* Rounded corners */
+  border-radius: 12px;
+}
+
+.no-bookings p {
+  /* Message text */
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 1rem;
+}
+
+/* Button to browse services */
+.btn-book-service {
+  /* Gradient background */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  /* White text */
+  color: white;
+  
+  /* Padding */
+  padding: 12px 25px;
+  
+  /* Rounded corners */
+  border-radius: 8px;
+  
+  /* No border */
+  border: none;
+  
+  /* Pointer cursor */
+  cursor: pointer;
+  
+  /* Font styling */
+  font-weight: bold;
+  font-size: 1rem;
+  
+  /* Smooth transitions */
+  transition: all 0.3s ease;
+}
+
+.btn-book-service:hover {
+  /* Lift up on hover */
+  transform: translateY(-3px);
+  
+  /* Stronger shadow */
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Bookings list styling */
+.bookings-list {
+  /* Grid layout */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Individual booking card styling */
+.booking-card {
+  /* Light background */
+  background: #f9f9f9;
+  
+  /* Padding inside */
+  padding: 20px;
+  
+  /* Rounded corners */
+  border-radius: 12px;
+  
+  /* Border accent */
+  border-left: 5px solid #667eea;
+  
+  /* Smooth transitions */
+  transition: all 0.3s ease;
+}
+
+.booking-card:hover {
+  /* Lift up on hover */
+  transform: translateY(-5px);
+  
+  /* Shadow on hover */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Booking card header with service name */
+.booking-header {
+  /* Flexbox for layout */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  /* Bottom margin */
+  margin-bottom: 15px;
+  
+  /* Padding below */
+  padding-bottom: 15px;
+  
+  /* Border bottom */
+  border-bottom: 1px solid #ddd;
+}
+
+.booking-header h4 {
+  /* Title styling */
+  font-size: 1.1rem;
+  margin: 0;
+  color: #333;
+}
+
+/* Status badge styling */
+.booking-status {
+  /* Green background for confirmed status */
+  background: #28a745;
+  
+  /* White text */
+  color: white;
+  
+  /* Padding */
+  padding: 5px 12px;
+  
+  /* Rounded corners */
+  border-radius: 20px;
+  
+  /* Small font */
+  font-size: 0.75rem;
+  
+  /* Font weight */
+  font-weight: bold;
+}
+
+/* Booking details grid */
+.booking-details {
+  /* 2-column grid on desktop */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  
+  /* Bottom margin */
+  margin-bottom: 15px;
+}
+
+/* Individual detail item */
+.detail-item {
+  /* Flexbox vertical layout */
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.detail-item label {
+  /* Label styling */
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: #667eea;
+}
+
+.detail-item span {
+  /* Value styling */
+  color: #333;
+  font-size: 0.95rem;
+}
+
+/* Price styling */
+.detail-item .price {
+  /* Larger price display */
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #28a745;
+}
+
+/* Cancel button in booking card */
+.btn-cancel {
+  /* Red background */
+  background: #ffebee;
+  
+  /* Red text */
+  color: #e74c3c;
+  
+  /* Full width */
+  width: 100%;
+  
+  /* Padding */
+  padding: 10px;
+  
+  /* Rounded corners */
+  border-radius: 8px;
+  
+  /* No border */
+  border: none;
+  
+  /* Pointer cursor */
+  cursor: pointer;
+  
+  /* Font styling */
+  font-weight: bold;
+  font-size: 0.9rem;
+  
+  /* Smooth transitions */
+  transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+  /* Red background on hover */
+  background: #e74c3c;
+  
+  /* White text on hover */
+  color: white;
+  
+  /* Lift up on hover */
+  transform: translateY(-2px);
+}
+
+/* ===== QUICK STATS SECTION ===== */
+.quick-stats {
+  /* White background */
+  background: white;
+  
+  /* Rounded corners */
+  border-radius: 20px;
+  
+  /* Padding inside */
+  padding: 30px;
+  
+  /* Shadow */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.quick-stats h3 {
+  /* Title styling */
+  font-size: 1.3rem;
+  margin: 0 0 20px 0;
+  color: #333;
+}
+
+/* Grid layout for stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+}
+
+/* Individual stat card */
+.stat-card {
+  /* Center text */
+  text-align: center;
+  
+  /* Light gray background */
+  background: #f9f9f9;
+  
+  /* Padding inside */
+  padding: 20px;
+  
+  /* Rounded corners */
+  border-radius: 15px;
+  
+  /* Smooth transition */
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  background: #667eea;
+  color: white;
+}
+
+.stat-card h4 {
+  margin: 0 0 10px 0;
+  font-size: 0.9rem;
+}
+
+.stat-number {
+  /* Large number display */
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.stat-card small {
+  /* Small text below number */
+  display: block;
+  margin-top: 10px;
+  opacity: 0.7;
+}
+
+/* ===== FEATURES SECTION ===== */
+.features-section {
+  /* White background */
+  background: white;
+  
+  /* Rounded corners */
+  border-radius: 20px;
+  
+  /* Padding inside */
+  padding: 30px;
+  
+  /* Shadow */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.features-section h3 {
+  /* Title styling */
+  font-size: 1.3rem;
+  margin: 0 0 20px 0;
+  color: #333;
+}
+
+/* Grid layout for features */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+/* Individual feature card */
+.feature-card {
+  /* Center text */
+  text-align: center;
+  
+  /* Padding inside */
+  padding: 25px 20px;
+  
+  /* Light background */
+  background: #f9f9f9;
+  
+  /* Rounded corners */
+  border-radius: 15px;
+  
+  /* Smooth transition */
+  transition: all 0.3s ease;
+  
+  /* Pointer cursor on hover */
+  cursor: pointer;
+}
+
+.feature-card:hover {
+  /* Lift up on hover */
+  transform: translateY(-5px);
+  
+  /* Gradient background on hover */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  /* White text on hover */
+  color: white;
+  
+  /* Shadow on hover */
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+/* Icon styling inside feature card */
+.feature-icon {
+  /* Large emoji/icon */
+  font-size: 2.5rem;
+  
+  /* Display as block for spacing */
+  display: block;
+  
+  /* Space below icon */
+  margin-bottom: 15px;
+}
+
+.feature-card h4 {
+  /* Title inside card */
+  font-size: 1.1rem;
+  margin: 0 0 10px 0;
+}
+
+.feature-card p {
+  /* Description text */
+  margin: 0;
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
+
+/* ===== FOOTER ===== */
+.home-footer {
+  /* Centered text */
+  text-align: center;
+  
+  /* Padding */
+  padding: 30px 20px;
+  
+  /* Light text color */
+  color: white;
+  
+  /* Top margin for spacing */
+  margin-top: 40px;
+}
+
+.home-footer p {
+  /* Paragraph spacing */
+  margin: 5px 0;
+  
+  /* Smaller font */
+  font-size: 0.9rem;
+}
+
+/* ===== RESPONSIVE DESIGN (Mobile phones) ===== */
+/* When screen is smaller than 768px (tablets/phones) */
+@media (max-width: 768px) {
+  .home-header h1 {
+    /* Smaller title on mobile */
+    font-size: 1.8rem;
+  }
+
+  .profile-header {
+    /* Stack items vertically on mobile */
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .profile-actions {
+    /* Stack buttons vertically on mobile */
+    flex-direction: column;
+  }
+
+  .info-item {
+    /* Stack label and value vertically on mobile */
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  /* Bookings section - single column on mobile */
+  .bookings-list {
+    grid-template-columns: 1fr;
+  }
+
+  /* Booking details - stack vertically on mobile */
+  .booking-details {
+    grid-template-columns: 1fr;
+  }
+}

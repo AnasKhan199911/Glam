@@ -1,0 +1,109 @@
+.staff-auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a0033 0%, #2d0052 100%);
+  padding: 2rem;
+}
+
+.staff-auth-card {
+  width: 100%;
+  max-width: 450px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  padding: 2.5rem;
+  border-radius: 24px;
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 0.6s ease-out;
+}
+
+.staff-auth-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.staff-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.staff-auth-header h2 {
+  color: white;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.staff-auth-header p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+}
+
+.staff-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.staff-form label {
+  display: block;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.staff-form input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(138, 43, 226, 0.2);
+  padding: 0.9rem 1.2rem;
+  border-radius: 12px;
+  color: white;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.staff-form input:focus {
+  outline: none;
+  border-color: #8a2be2;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 4px rgba(138, 43, 226, 0.15);
+}
+
+.staff-login-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #8a2be2, #ff69b4);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.staff-login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(138, 43, 226, 0.4);
+}
+
+.staff-login-btn:active {
+  transform: translateY(0);
+}
+
+.staff-auth-footer {
+  margin-top: 2rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+  border-top: 1px solid rgba(138, 43, 226, 0.2);
+  padding-top: 1.5rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

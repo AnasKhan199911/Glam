@@ -1,0 +1,405 @@
+/* ===== CONTACT US PAGE STYLING ===== */
+/* This file styles the contact us page */
+
+.contact-page {
+  width: 100%;
+  min-height: 100vh;
+  background: transparent;
+  padding: 3rem 0;
+}
+
+/* ===== CONTACT HEADER ===== */
+.contact-header {
+  background: linear-gradient(135deg, rgba(102,126,234,0.95) 0%, rgba(118,75,162,0.95) 100%);
+  color: white;
+  text-align: center;
+  padding: 40px 20px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.14);
+  max-width: 1200px;
+  margin: 1.5rem auto;
+}
+
+.contact-header h1 {
+  font-size: 42px;
+  margin: 0 0 10px 0;
+  font-weight: bold;
+}
+
+.contact-header p {
+  font-size: 18px;
+  margin: 0;
+  opacity: 0.9;
+}
+
+/* ===== CONTACT CONTAINER ===== */
+.contact-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ===== CONTACT FORM SECTION ===== */
+.contact-form-section {
+  background: rgba(255,255,255,0.06);
+  padding: 40px;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(31,38,135,0.08);
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(6px);
+}
+
+.contact-form-section h2 {
+  color: #333;
+  font-size: 28px;
+  margin: 0 0 30px 0;
+  font-weight: bold;
+}
+
+/* Success message styling */
+.success-message {
+  background: #d4edda;
+  border: 2px solid #28a745;
+  color: #155724;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  font-weight: bold;
+  animation: slideUp 0.3s ease;
+}
+
+/* Form group styling (each label + input combination) */
+.form-group {
+  margin-bottom: 25px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-sizing: border-box;
+}
+
+/* Input and textarea hover and focus effects */
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* Submit button styling */
+.submit-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.submit-btn:active {
+  transform: translateY(-1px);
+}
+
+/* ===== CONTACT INFO SECTION ===== */
+.contact-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.contact-info-section h2 {
+  color: #333;
+  font-size: 28px;
+  margin: 0;
+  font-weight: bold;
+}
+
+/* Info card styling (address, phone, email, hours) */
+.info-card {
+  background: rgba(255,255,255,0.06);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(31,38,135,0.08);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Info icon styling (emoji) */
+.info-icon {
+  font-size: 36px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.info-card h3 {
+  color: #667eea;
+  font-size: 18px;
+  margin: 0 0 10px 0;
+  font-weight: bold;
+}
+
+.info-card p {
+  color: #666;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Social links styling */
+.social-links {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+}
+
+.social-links h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.social-icons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.social-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 18px;
+  transition: all 0.3s ease;
+}
+
+.social-icon:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: translateY(-3px);
+}
+
+/* ===== MAP SECTION ===== */
+.map-section {
+  background: rgba(255,255,255,0.03);
+  padding: 40px 20px;
+  text-align: center;
+  margin-top: 40px;
+  border-radius: 12px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.map-section h2 {
+  color: #333;
+  font-size: 28px;
+  margin: 0 0 40px 0;
+  font-weight: bold;
+}
+
+.map-placeholder {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 80px 40px;
+  border-radius: 12px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.map-placeholder p {
+  font-size: 18px;
+  margin: 0;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .contact-header {
+    padding: 40px 20px;
+  }
+
+  .contact-header h1 {
+    font-size: 32px;
+  }
+
+  .contact-header p {
+    font-size: 16px;
+  }
+
+  /* Stack form and info sections vertically on tablet */
+  .contact-container {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding: 40px 20px;
+  }
+
+  .contact-form-section,
+  .contact-info-section h2 {
+    padding: 30px 20px;
+  }
+
+  .contact-form-section h2,
+  .contact-info-section h2 {
+    font-size: 24px;
+  }
+
+  .map-section {
+    padding: 40px 20px;
+  }
+
+  .map-section h2 {
+    font-size: 24px;
+  }
+
+  .map-placeholder {
+    padding: 60px 20px;
+  }
+
+  .social-icons {
+    gap: 10px;
+  }
+
+  .social-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contact-header h1 {
+    font-size: 24px;
+  }
+
+  .contact-header p {
+    font-size: 14px;
+  }
+
+  .contact-container {
+    padding: 25px 15px;
+    gap: 20px;
+  }
+
+  .contact-form-section {
+    padding: 20px;
+  }
+
+  .contact-form-section h2,
+  .contact-info-section h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+  }
+
+  .form-group label {
+    font-size: 12px;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .submit-btn {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .info-card {
+    padding: 20px;
+  }
+
+  .info-icon {
+    font-size: 28px;
+  }
+
+  .info-card h3 {
+    font-size: 16px;
+  }
+
+  .info-card p {
+    font-size: 13px;
+  }
+
+  .social-links {
+    padding: 20px;
+  }
+
+  .social-links h3 {
+    font-size: 16px;
+  }
+
+  .map-section {
+    padding: 30px 15px;
+  }
+
+  .map-section h2 {
+    font-size: 20px;
+  }
+
+  .map-placeholder {
+    padding: 50px 20px;
+  }
+
+  .map-placeholder p {
+    font-size: 14px;
+  }
+}
