@@ -322,8 +322,8 @@ const Profile = () => {
           )}
         </div>
 
-        {/* User Tabs */}
-        {!availabilityMode && (
+        {/* User Tabs - Hidden for Admin */}
+        {!availabilityMode && !isAdmin && (
           <div className="profile-tabs">
             <button className={`tab-btn ${activeTab === 'bookings' ? 'active' : ''}`} onClick={() => setActiveTab('bookings')}>
               📅 Bookings
@@ -530,8 +530,8 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Bookings Display */}
-        {!availabilityMode && activeTab === 'bookings' && (
+        {/* Bookings Display - Hidden for Admin */}
+        {!availabilityMode && !isAdmin && activeTab === 'bookings' && (
           <div className="bookings-section">
             <h3 className="section-title">My Bookings</h3>
             {loading ? (
@@ -561,8 +561,8 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Notifications Display */}
-        {!availabilityMode && activeTab === 'notifications' && (
+        {/* Notifications Display - Hidden for Admin */}
+        {!availabilityMode && !isAdmin && activeTab === 'notifications' && (
           <div className="notifications-section">
             <h3 className="section-title">Your Notifications</h3>
             {notifications.length === 0 ? (

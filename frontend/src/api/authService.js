@@ -49,13 +49,40 @@ export const login = async (email, password) => {
   }
 };
 
+// ========== PASSWORD RESET OTP FUNCTION ==========
+export const forgotPasswordSendOtp = async (email) => {
+  try {
+    const response = await axiosInstance.post('/auth/forgot-password-send-otp', {
+      email,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Forgot password OTP error:', error.response?.data || error.message);
+    throw error.response?.data || { success: false, message: 'Failed to send OTP' };
+  }
+};
+
+// ========== VERIFY RESET OTP FUNCTION ==========
+export const verifyResetOtp = async (email, otp) => {
+  try {
+    const response = await axiosInstance.post('/auth/verify-reset-otp', {
+      email,
+      otp,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Verify reset OTP error:', error.response?.data || error.message);
+    throw error.response?.data || { success: false, message: 'Verification failed' };
+  }
+};
+
 // ========== PASSWORD RESET FUNCTION ==========
-// User provides email, phone number, and new password for verification
-export const resetPassword = async (email, contact, newPassword) => {
+// User provides email, otp, and new password
+export const resetPassword = async (email, otp, newPassword) => {
   try {
     const response = await axiosInstance.post('/auth/reset-password', {
       email,
-      contact,
+      otp,
       newPassword,
     });
     return response.data;

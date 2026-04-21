@@ -165,13 +165,12 @@ class AuthController extends Controller
         return response()->json(['success' => true, 'message' => 'Email verified.']);
     }
 
-    public function resetPassword(Request $request)
+    public function forgotPasswordSendOtp(Request $request)
     {
         $email = trim($request->email ?? '');
-        $newPassword = $request->newPassword ?? '';
 
-        if (empty($email) || empty($newPassword)) {
-            return response()->json(['success' => false, 'message' => 'Missing fields'], 400);
+        if (empty($email)) {
+            return response()->json(['success' => false, 'message' => 'Email is required'], 400);
         }
 
         $user = User::where('email', $email)->first();
@@ -179,7 +178,76 @@ class AuthController extends Controller
             return response()->json(['success' => false, 'message' => 'User not found'], 404);
         }
 
-        $user->update(['password' => Hash::make($newPassword)]);
+        $otp = rand(100000, 999999);
+        $tokenExpiry = Carbon::now()->addMinutes(15);
+
+        $user->update([
+            'verify_token' => $otp,
+            'verify_expires' => $tokenExpiry,
+        ]);
+
+        // Send OTP email
+        try {
+            Mail::raw("Your OTP for GlamConnect password reset is: {$otp}\n\nThis OTP will expire in 15 minutes.", function ($message) use ($email, $user) {
+                $message->to($email, $user->name)
+                        ->subject('GlamConnect - Password Reset OTP');
+            });
+        } catch (\Exception $e) {
+            \Log::error('Mail sending failed: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to send email. Please check your mail configuration or try again later.'], 500);
+        }
+
+        return response()->json(['success' => true, 'message' => 'OTP sent to your email.']);
+    }
+
+    public function verifyResetOtp(Request $request)
+    {
+        $email = trim($request->email ?? '');
+        $otp = $request->otp;
+
+        if (empty($email) || empty($otp)) {
+            return response()->json(['success' => false, 'message' => 'Email and OTP are required'], 400);
+        }
+
+        $user = User::where('email', $email)->where('verify_token', $otp)->first();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Invalid OTP'], 400);
+        }
+
+        if (Carbon::parse($user->verify_expires)->isPast()) {
+            return response()->json(['success' => false, 'message' => 'OTP expired'], 410);
+        }
+
+        return response()->json(['success' => true, 'message' => 'OTP verified successfully']);
+    }
+
+    public function resetPasswordWithOtp(Request $request)
+    {
+        $email = trim($request->email ?? '');
+        $otp = $request->otp;
+        $newPassword = $request->newPassword;
+
+        if (empty($email) || empty($otp) || empty($newPassword)) {
+            return response()->json(['success' => false, 'message' => 'All fields are required'], 400);
+        }
+
+        $user = User::where('email', $email)->where('verify_token', $otp)->first();
+
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Invalid OTP'], 400);
+        }
+
+        if (Carbon::parse($user->verify_expires)->isPast()) {
+            return response()->json(['success' => false, 'message' => 'OTP expired'], 410);
+        }
+
+        $user->update([
+            'password' => Hash::make($newPassword),
+            'verify_token' => null,
+            'verify_expires' => null,
+            'is_verified' => 1 // Mark as verified if they reset password (security measure)
+        ]);
 
         return response()->json(['success' => true, 'message' => 'Password reset successful']);
     }

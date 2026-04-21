@@ -136,7 +136,16 @@ const StaffDashboard = () => {
   const handleClockIn = async () => {
     try {
       setLoading(true);
-      const resp = await axios.post('/attendance/mark', { id: staffMember.id, type: 'check_in' });
+      const now = new Date();
+      const localDate = now.toISOString().split('T')[0];
+      const localTime = now.toTimeString().split(' ')[0]; // HH:MM:SS
+      
+      const resp = await axios.post('/attendance/mark', { 
+        id: staffMember.id, 
+        type: 'check_in',
+        date: localDate,
+        time: localTime
+      });
       if (resp.data.success) {
         setAttendanceRecord(resp.data.data);
         showSuccess('Clocked in successfully! Have a great day!');
@@ -152,7 +161,16 @@ const StaffDashboard = () => {
   const handleClockOut = async () => {
     try {
       setLoading(true);
-      const resp = await axios.post('/attendance/mark', { id: staffMember.id, type: 'check_out' });
+      const now = new Date();
+      const localDate = now.toISOString().split('T')[0];
+      const localTime = now.toTimeString().split(' ')[0]; // HH:MM:SS
+
+      const resp = await axios.post('/attendance/mark', { 
+        id: staffMember.id, 
+        type: 'check_out',
+        date: localDate,
+        time: localTime
+      });
       if (resp.data.success) {
         setAttendanceRecord(resp.data.data);
         showInfo('Clocked out. See you next time!');
@@ -215,7 +233,7 @@ const StaffDashboard = () => {
           </div>
         </div>
         <div className="header-actions">
-          <button className="logout-btn-minimal" onClick={handleLogout} title="Logout">🚪</button>
+          <button className="logout-btn-minimal" onClick={handleLogout} title="Logout">Logout</button>
           {!attendanceRecord?.check_in ? (
             <button className="clock-btn clock-in" onClick={handleClockIn} disabled={loading}>
               {loading ? '⌛...' : '⏰ Clock In'}
@@ -260,7 +278,7 @@ const StaffDashboard = () => {
           </div>
         </div>
         <div className="quick-stat highlight">
-          <span className="stat-icon">💰</span>
+          <span className="stat-icon"></span>
           <div className="stat-details">
             <span className="stat-number">Rs {stats.earnings.toLocaleString()}</span>
             <span className="stat-text">Life Time Earnings</span>
@@ -469,12 +487,7 @@ const StaffDashboard = () => {
               </div>
             </div>
             <div className="profile-actions">
-              <button className="profile-btn" onClick={() => showInfo('Edit profile feature coming soon!')}>
-                ✏️ Edit Profile
-              </button>
-              <button className="profile-btn" onClick={() => showInfo('Password change feature coming soon!')}>
-                🔐 Change Password
-              </button>
+              {/* Profile actions removed as requested */}
             </div>
           </div>
         )}

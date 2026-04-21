@@ -70,8 +70,8 @@ const AdminDashboard = () => {
     { value: 'manager', label: 'Manager' }
   ];
 
-  const fetchBookings = async () => {
-    setLoading(true);
+  const fetchBookings = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const resp = await axios.post('/bookings/get-all');
       if (resp.data && resp.data.success) {
@@ -80,7 +80,7 @@ const AdminDashboard = () => {
     } catch (err) {
       console.error('Error fetching bookings:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -155,15 +155,19 @@ const AdminDashboard = () => {
     fetchReviews();
   }, []);
 
-  // Real-time polling for Attendance Tab
+  // Real-time polling for all tabs to reflect manual DB changes
   useEffect(() => {
     let interval;
-    if (activeTab === 'attendance' || activeTab === 'reviews') {
-      interval = setInterval(() => {
-        if (activeTab === 'attendance') fetchAttendance();
-        if (activeTab === 'reviews') fetchReviews();
-      }, 5000); 
-    }
+    // We poll everything silently every 3 seconds
+    interval = setInterval(() => {
+      fetchBookings(true);
+      fetchServices(true); // Added silent param support
+      fetchStaff(true);
+      fetchUsers(true);
+      fetchAttendance(true);
+      fetchReviews(true);
+    }, 3000); 
+    
     return () => clearInterval(interval);
   }, [activeTab]);
 
@@ -173,8 +177,15 @@ const AdminDashboard = () => {
     let upcoming = 0, past = 0, confirmed = 0;
     
     bookings.forEach(b => {
-      const dt = new Date(b.date + 'T' + (b.time || '00:00'));
-      if (dt >= now) upcoming++; else past++;
+      // Use booking_date/time or fallback to date/time
+      const dateStr = b.booking_date || b.date;
+      const timeStr = b.booking_time || b.time || '00:00';
+      
+      if (dateStr) {
+        const dt = new Date(dateStr + 'T' + timeStr);
+        if (dt >= now) upcoming++; else past++;
+      }
+      
       if (b.status === 'confirmed') confirmed++;
     });
 

@@ -177,12 +177,14 @@ const Navbar = () => {
                     📊 Dashboard
                   </button>
                 )}
-                <button 
-                  className="dropdown-item"
-                  onClick={handleProfileClick}
-                >
-                  👤 My Profile
-                </button>
+                {!localStorage.getItem('staffToken') && (
+                  <button 
+                    className="dropdown-item"
+                    onClick={handleProfileClick}
+                  >
+                    👤 My Profile
+                  </button>
+                )}
                 <button 
                   className="dropdown-item"
                   onClick={handleLogout}

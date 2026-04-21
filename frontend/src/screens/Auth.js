@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Auth.css';
-import { signup, verifyOtp } from '../api/authService';
-import { auth, sendVerificationToUser, sendPasswordReset, firebaseConfig } from '../firebase';
+import { signup, verifyOtp, forgotPasswordSendOtp, verifyResetOtp, resetPassword } from '../api/authService';
+import { auth, sendVerificationToUser, firebaseConfig } from '../firebase';
 import { createUserWithEmailAndPassword, signOut, signInWithEmailAndPassword } from 'firebase/auth';
 import axios from '../api/axiosConfig';
 import { useToast } from '../components/ToastContainer';
@@ -20,6 +20,7 @@ const Auth = () => {
   // Which form tab is currently showing (login, signup, or forgot)
   const [activeTab, setActiveTab] = useState('login');
   const [showOtpStep, setShowOtpStep] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1); // 1: Email, 2: OTP, 3: New Password
   const [otpValue, setOtpValue] = useState('');
   
   // Stores all form input values from the user
@@ -254,45 +255,75 @@ const Auth = () => {
   };
 
   // ===== FORGOT PASSWORD HANDLER =====
-  // This function runs when user submits the forgot password form
-  const handleForgotPassword = async (e) => {
-    // Prevent page refresh
+  const handleForgotPasswordStep1 = async (e) => {
     e.preventDefault();
-    
-    // Create object to store errors
-    let newErrors = {};
-    
-    // Validation checks
-    if (!formData.email) newErrors.email = 'Email is required';
-    if (formData.email && !validateEmail(formData.email)) {
-      newErrors.email = 'Invalid email';
+    if (!formData.email || !validateEmail(formData.email)) {
+      setErrors({ email: 'Valid email is required' });
+      return;
     }
-    if (!formData.contact) newErrors.contact = 'Contact is required';
-    if (formData.contact && !validatePhone(formData.contact)) {
-      newErrors.contact = 'Invalid contact number';
+    setLoading(true);
+    setErrors({});
+    try {
+      const resp = await forgotPasswordSendOtp(formData.email);
+      if (resp && resp.success) {
+        showSuccess('OTP sent to your email!');
+        setForgotStep(2);
+      } else {
+        showError(resp.message || 'Failed to send OTP');
+      }
+    } catch (err) {
+      showError(err.message || 'Error sending OTP');
+    } finally {
+      setLoading(false);
     }
-    if (!formData.newPassword) newErrors.newPassword = 'New password is required';
+  };
 
-    // If errors found, show them and stop
+  const handleVerifyForgotOtp = async (e) => {
+    e.preventDefault();
+    if (otpValue.length !== 6) {
+      showError('Please enter 6-digit OTP');
+      return;
+    }
+    setLoading(true);
+    try {
+      const resp = await verifyResetOtp(formData.email, otpValue);
+      if (resp && resp.success) {
+        showSuccess('OTP verified! Now enter your new password.');
+        setForgotStep(3);
+      } else {
+        showError(resp.message || 'Invalid OTP');
+      }
+    } catch (err) {
+      showError(err.message || 'Verification failed. Please check your OTP.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    let newErrors = {};
+    if (!formData.newPassword) newErrors.newPassword = 'New password is required';
+    if (formData.newPassword !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    // Use Firebase to send password reset email
     setLoading(true);
-    setErrors({});
     try {
-      const r = await sendPasswordReset(formData.email);
-      if (r.success) {
-        showSuccess('Password reset email sent. Please check your inbox.');
+      const resp = await resetPassword(formData.email, otpValue, formData.newPassword);
+      if (resp && resp.success) {
+        showSuccess('Password reset successful! Please login.');
         setActiveTab('login');
+        setForgotStep(1);
+        setOtpValue('');
       } else {
-        setErrors({ api: r.message || 'Failed to send reset email' });
+        showError(resp.message || 'Reset failed');
       }
     } catch (err) {
-      console.error('Password reset error', err);
-      setErrors({ api: err.message || 'Password reset failed' });
+      showError(err.message || 'Reset error');
     } finally {
       setLoading(false);
     }
@@ -500,53 +531,81 @@ const Auth = () => {
 
             {/* ===== FORGOT PASSWORD FORM ===== */}
             {activeTab === 'forgot' && (
-              <form onSubmit={handleForgotPassword} className="auth-form tab-panel">
-                {errors.api && <div className="error-banner">{errors.api}</div>}
-                
-                <p className="forgot-text">Reset your password with your email and contact</p>
-                
-                <div className="form-group">
-                  <label>Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="Enter your email"
-                    disabled={loading}
-                  />
-                  {errors.email && <span className="error">{errors.email}</span>}
-                </div>
-                
-                <div className="form-group">
-                  <label>Contact</label>
-                  <input
-                    type="tel"
-                    name="contact"
-                    value={formData.contact}
-                    onChange={handleChange}
-                    placeholder="Enter your contact number"
-                    disabled={loading}
-                  />
-                  {errors.contact && <span className="error">{errors.contact}</span>}
-                </div>
-                
-                <div className="form-group">
-                  <label>New Password</label>
-                  <input
-                    type="password"
-                    name="newPassword"
-                    value={formData.newPassword}
-                    onChange={handleChange}
-                    placeholder="Enter your new password"
-                    disabled={loading}
-                  />
-                  {errors.newPassword && <span className="error">{errors.newPassword}</span>}
-                </div>
-                
-                <button type="submit" className="auth-btn" disabled={loading}>
-                  {loading ? 'Resetting...' : 'Reset Password'}
-                </button>
+              <div className="auth-form tab-panel">
+                {forgotStep === 1 && (
+                  <form onSubmit={handleForgotPasswordStep1}>
+                    <h2>Forgot Password</h2>
+                    <p className="forgot-text">Enter your email to receive a reset OTP</p>
+                    <div className="form-group">
+                      <label>Email</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="Enter your email"
+                        disabled={loading}
+                      />
+                      {errors.email && <span className="error">{errors.email}</span>}
+                    </div>
+                    <button type="submit" className="auth-btn" disabled={loading}>
+                      {loading ? 'Sending...' : 'Send OTP'}
+                    </button>
+                  </form>
+                )}
+
+                {forgotStep === 2 && (
+                  <form onSubmit={handleVerifyForgotOtp}>
+                    <h2>Verify OTP</h2>
+                    <p className="forgot-text">Enter the 6-digit OTP sent to {formData.email}</p>
+                    <div className="form-group">
+                      <label>OTP Code</label>
+                      <input
+                        type="text"
+                        value={otpValue}
+                        onChange={(e) => setOtpValue(e.target.value)}
+                        placeholder="6-digit OTP"
+                        maxLength={6}
+                        disabled={loading}
+                      />
+                    </div>
+                    <button type="submit" className="auth-btn">Verify OTP</button>
+                  </form>
+                )}
+
+                {forgotStep === 3 && (
+                  <form onSubmit={handleResetPassword}>
+                    <h2>New Password</h2>
+                    <p className="forgot-text">Create a strong new password</p>
+                    <div className="form-group">
+                      <label>New Password</label>
+                      <input
+                        type="password"
+                        name="newPassword"
+                        value={formData.newPassword}
+                        onChange={handleChange}
+                        placeholder="New password"
+                        disabled={loading}
+                      />
+                      {errors.newPassword && <span className="error">{errors.newPassword}</span>}
+                    </div>
+                    <div className="form-group">
+                      <label>Confirm New Password</label>
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        placeholder="Confirm password"
+                        disabled={loading}
+                      />
+                      {errors.confirmPassword && <span className="error">{errors.confirmPassword}</span>}
+                    </div>
+                    <button type="submit" className="auth-btn" disabled={loading}>
+                      {loading ? 'Resetting...' : 'Update Password'}
+                    </button>
+                  </form>
+                )}
                 
                 <div className="form-meta center">
                   <button
@@ -554,6 +613,7 @@ const Auth = () => {
                     className="link-btn"
                     onClick={() => {
                       setActiveTab('login');
+                      setForgotStep(1);
                       setErrors({});
                     }}
                     disabled={loading}
@@ -561,7 +621,7 @@ const Auth = () => {
                     Back to login
                   </button>
                 </div>
-              </form>
+              </div>
             )}
           </>
         )}

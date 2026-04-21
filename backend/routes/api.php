@@ -22,7 +22,9 @@ Route::prefix('auth')->group(function () {
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/admin-login', [AuthController::class, 'login']); 
-    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    Route::post('/forgot-password-send-otp', [AuthController::class, 'forgotPasswordSendOtp']);
+    Route::post('/verify-reset-otp', [AuthController::class, 'verifyResetOtp']);
+    Route::post('/reset-password', [AuthController::class, 'resetPasswordWithOtp']);
     Route::post('/get-users', [AuthController::class, 'getUsers']);
     Route::post('/delete-user', [AuthController::class, 'deleteUser']);
 });

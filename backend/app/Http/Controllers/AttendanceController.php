@@ -18,8 +18,8 @@ class AttendanceController extends Controller
     public function markAttendance(Request $request)
     {
         $id = $request->id; // Staff ID
-        $date = date('Y-m-d');
-        $time = date('H:i:s');
+        $date = $request->date ?? date('Y-m-d');
+        $time = $request->time ?? date('H:i:s');
         $type = $request->type; // 'check_in' or 'check_out'
 
         $attendance = \App\Models\Attendance::firstOrCreate(

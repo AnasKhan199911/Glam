@@ -10,15 +10,15 @@
   margin: 0 auto;
   padding: 2.5rem;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(20, 0, 40, 0.7); /* Darker background for contrast */
   border: 1px solid rgba(138, 43, 226, 0.3);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(15px);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.08) !important;
-  backdrop-filter: blur(15px) !important;
+  background: rgba(20, 0, 40, 0.6) !important;
+  backdrop-filter: blur(20px) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
@@ -922,38 +922,39 @@
 }
 
 .booking-card {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(138, 43, 226, 0.3);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(138, 43, 226, 0.4);
   border-radius: 16px;
-  padding: 1.25rem;
+  padding: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 1rem;
 }
 
 .booking-card:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(138, 43, 226, 0.6);
+  background: rgba(0, 0, 0, 0.6);
+  border-color: #8a2be2;
   transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
 }
 
 .booking-main h4 {
-  margin: 0 0 0.4rem 0;
-  color: #fff;
-  font-size: 1.15rem;
+  margin: 0 0 0.5rem 0;
+  color: #ffffff !important;
+  font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: 0.5px;
 }
 
 .booking-main p {
-  margin: 0.2rem 0;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.9rem;
+  margin: 0.3rem 0;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 0.95rem;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .status-text {
