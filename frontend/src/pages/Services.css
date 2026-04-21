@@ -881,3 +881,98 @@
     padding: 20px;
   }
 }
+
+/* Time Slots Grid Improvements */
+.time-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.time-slot-btn {
+  position: relative;
+  padding: 15px 10px;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1a0838;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.time-slot-btn:hover:not(:disabled) {
+  border-color: #6c2bff;
+  background: #f8f5ff;
+  color: #6c2bff;
+  transform: translateY(-2px);
+}
+
+.time-slot-btn.selected {
+  background: linear-gradient(135deg, #6c2bff, #9c47ff);
+  border-color: #6c2bff;
+  color: #fff !important;
+  box-shadow: 0 5px 15px rgba(108, 43, 255, 0.3);
+}
+
+.time-slot-btn:disabled {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #94a3b8 !important;
+  cursor: not-allowed;
+  opacity: 0.8;
+  overflow: hidden;
+}
+
+.booked-badge {
+  font-size: 0.65rem;
+  background: #ff4757;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.loading-slots {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px;
+  color: #6c2bff;
+  font-weight: 600;
+}
+
+.spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(108, 43, 255, 0.1);
+  border-top: 2px solid #6c2bff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.form-helper-text {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-style: italic;
+  padding: 10px;
+}
+
+.form-helper-text.error {
+  color: #ff4757;
+}
+
+@media (max-width: 480px) {
+  .time-slots-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  }
+}

@@ -1134,3 +1134,56 @@
 .status-toast.success { background: #22c55e; color: white; }
 .status-toast.error { background: #ef4444; color: white; }
 .status-toast.info { background: #3b82f6; color: white; }
+
+/* Profile Booking Enhancements */
+.cancelled-card {
+  opacity: 0.7;
+  border: 1px dashed #ff4757 !important;
+}
+
+.reschedule-pending-tag {
+  color: #f39c12;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.edit-form-mobile {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px;
+  border-radius: 12px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.save-btn {
+  background: #6c2bff;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancel-booking-btn {
+  background: rgba(255, 71, 87, 0.1);
+  color: #ff4757;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.del-btn-minimal {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+

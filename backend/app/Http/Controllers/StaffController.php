@@ -119,24 +119,41 @@ class StaffController extends Controller
             explode(' ', $role)
         )), function($k) { return strlen($k) > 2; });
 
-        // Broaden beautician matching to include 'Makeup'
-        if (in_array('beautician', $keywords)) {
-            $keywords[] = 'makeup';
-        } elseif (in_array('makeup', $keywords)) {
-            $keywords[] = 'beautician';
+        // Broaden keywords with synonyms for better matching
+        $broadenedKeywords = $keywords;
+        foreach ($keywords as $k) {
+            if ($k === 'stylist' || $k === 'hair') {
+                $broadenedKeywords[] = 'hair';
+                $broadenedKeywords[] = 'styling';
+            }
+            if ($k === 'beautician' || $k === 'makeup' || $k === 'skincare') {
+                $broadenedKeywords[] = 'makeup';
+                $broadenedKeywords[] = 'skincare';
+                $broadenedKeywords[] = 'beautician';
+            }
+            if ($k === 'therapist' || $k === 'spa' || $k === 'massage') {
+                $broadenedKeywords[] = 'spa';
+                $broadenedKeywords[] = 'massage';
+                $broadenedKeywords[] = 'therapist';
+            }
+            if ($k === 'nails' || $k === 'manicure' || $k === 'pedicure' || $k === 'nail') {
+                $broadenedKeywords[] = 'nails';
+                $broadenedKeywords[] = 'manicure';
+                $broadenedKeywords[] = 'pedicure';
+            }
         }
+        $broadenedKeywords = array_unique($broadenedKeywords);
 
         $bookings = \App\Models\Booking::with(['user', 'service'])
-            ->whereHas('service', function($query) use ($keywords) {
-                $query->where(function($q) use ($keywords) {
-                    foreach ($keywords as $keyword) {
-                        if ($keyword != 'stylist' && $keyword != 'staff' && $keyword != 'specialist') {
-                            $q->orWhere('name', 'like', "%$keyword%")
-                              ->orWhere('category', 'like', "%$keyword%");
-                        }
+            ->whereHas('service', function($query) use ($broadenedKeywords) {
+                $query->where(function($q) use ($broadenedKeywords) {
+                    foreach ($broadenedKeywords as $keyword) {
+                        $q->orWhere('name', 'like', "%$keyword%")
+                          ->orWhere('category', 'like', "%$keyword%");
                     }
                 });
             })
+            ->where('status', '!=', 'cancelled')
             ->orderBy('booking_date', 'asc')
             ->orderBy('booking_time', 'asc')
             ->get();

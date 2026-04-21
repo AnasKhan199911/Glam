@@ -44,7 +44,10 @@ Route::prefix('bookings')->group(function () {
     Route::post('/get-available-slots', [BookingController::class, 'getAvailableSlots']);
     Route::post('/create', [BookingController::class, 'createBooking']);
     Route::post('/update', [BookingController::class, 'updateBooking']);
-    Route::post('/delete', [BookingController::class, 'deleteBooking']);
+    Route::post('/cancel', [BookingController::class, 'cancelBooking']);
+    Route::post('/request-reschedule', [BookingController::class, 'requestReschedule']);
+    Route::post('/approve-reschedule', [BookingController::class, 'approveReschedule']);
+    Route::post('/reject-reschedule', [BookingController::class, 'rejectReschedule']);
 });
 
 Route::prefix('services')->group(function () {

@@ -395,40 +395,43 @@ const Services = () => {
                 <div className="form-row">
                   <div className="form-group">
                     <label>Select Date</label>
-                    <select
+                    <input
+                      type="date"
+                      min={new Date().toISOString().split('T')[0]}
+                      max={`${new Date().getFullYear()}-12-31`}
                       value={bookingData.date}
                       onChange={(e) => setBookingData({...bookingData, date: e.target.value, time: ''})}
-                      disabled={fetchingDates || availableDates.length === 0}
-                    >
-                      <option value="">
-                        {fetchingDates ? 'Loading dates...' : (availableDates.length === 0 ? 'No dates available' : 'Choose a date')}
-                      </option>
-                      {availableDates.map(date => (
-                        <option key={date} value={date}>
-                          {new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-                        </option>
-                      ))}
-                    </select>
+                      className="calendar-input"
+                    />
                   </div>
-                  <div className="form-group">
+                  <div className="form-group full-width">
                     <label>Select Time</label>
-                    <select
-                      value={bookingData.time}
-                      onChange={(e) => setBookingData({...bookingData, time: e.target.value})}
-                      disabled={fetchingSlots || !bookingData.date}
-                    >
-                      <option value="">{fetchingSlots ? 'Loading slots...' : 'Choose a time slot'}</option>
-                      {generateTimeSlots().map((slot) => (
-                        <option 
-                          key={slot.originalTime} 
-                          value={slot.originalTime} 
-                          disabled={!slot.available}
-                          style={{ color: slot.available ? 'inherit' : '#ccc' }}
-                        >
-                          {slot.displayTime} {!slot.available ? '(Booked)' : ''}
-                        </option>
-                      ))}
-                    </select>
+                    {fetchingSlots ? (
+                      <div className="loading-slots">
+                        <div className="spinner-small"></div>
+                        <span>Checking availability...</span>
+                      </div>
+                    ) : !bookingData.date ? (
+                      <p className="form-helper-text">Please select a date first</p>
+                    ) : availableSlots.length === 0 ? (
+                      <p className="form-helper-text error">No time slots available for this date</p>
+                    ) : (
+                      <div className="time-slots-grid">
+                        {generateTimeSlots().map((slot) => (
+                          <button
+                            key={slot.originalTime}
+                            type="button"
+                            className={`time-slot-btn ${bookingData.time === slot.originalTime ? 'selected' : ''}`}
+                            disabled={!slot.available}
+                            onClick={() => setBookingData({...bookingData, time: slot.originalTime})}
+                            title={slot.available ? 'Click to select' : 'Already Booked'}
+                          >
+                            {slot.displayTime}
+                            {!slot.available && <div className="booked-badge">Booked</div>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 

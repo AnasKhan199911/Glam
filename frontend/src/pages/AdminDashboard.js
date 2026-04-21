@@ -62,12 +62,11 @@ const AdminDashboard = () => {
 
   const categories = ['Hair', 'Nails', 'Makeup', 'Skincare', 'Spa'];
   const roles = [
-    { value: 'stylist', label: 'Hair Stylist' },
-    { value: 'beautician', label: 'Beautician' },
-    { value: 'therapist', label: 'Spa Therapist' },
-    { value: 'nail_artist', label: 'Nail Artist' },
-    { value: 'receptionist', label: 'Receptionist' },
-    { value: 'manager', label: 'Manager' }
+    { value: 'hair', label: 'Hair' },
+    { value: 'makeup', label: 'Makeup' },
+    { value: 'nails', label: 'Nails' },
+    { value: 'skincare', label: 'Skincare' },
+    { value: 'spa', label: 'Spa' }
   ];
 
   const fetchBookings = async (silent = false) => {
@@ -158,15 +157,15 @@ const AdminDashboard = () => {
   // Real-time polling for all tabs to reflect manual DB changes
   useEffect(() => {
     let interval;
-    // We poll everything silently every 3 seconds
+    // We poll everything silently every 10 seconds to keep data fresh without overloading the server
     interval = setInterval(() => {
       fetchBookings(true);
-      fetchServices(true); // Added silent param support
+      fetchServices(true);
       fetchStaff(true);
       fetchUsers(true);
       fetchAttendance(true);
       fetchReviews(true);
-    }, 3000); 
+    }, 10000); 
     
     return () => clearInterval(interval);
   }, [activeTab]);
@@ -216,7 +215,7 @@ const AdminDashboard = () => {
       const resp = await axios.post('/bookings/update', payload);
       if (resp.data && resp.data.success) {
         showSuccess('Booking updated successfully');
-        fetchBookings();
+        fetchBookings(true);
       } else {
         showError('Failed to update booking');
       }
@@ -224,6 +223,32 @@ const AdminDashboard = () => {
       showError('Error updating booking');
     }
   };
+
+  const handleApproveReschedule = async (id) => {
+    try {
+      const resp = await axios.post('/bookings/approve-reschedule', { id });
+      if (resp.data.success) {
+        showSuccess('Reschedule request approved!');
+        fetchBookings(true);
+      }
+    } catch (err) {
+      showError('Failed to approve request');
+    }
+  };
+
+  const handleRejectReschedule = async (id) => {
+    try {
+      const resp = await axios.post('/bookings/reject-reschedule', { id });
+      if (resp.data.success) {
+        showWarning('Reschedule request rejected');
+        fetchBookings(true);
+      }
+    } catch (err) {
+      showError('Failed to reject request');
+    }
+  };
+
+  const pendingRequests = bookings.filter(b => b.reschedule_status === 'pending');
 
   const toggleServiceStatus = async (serviceId, currentStatus) => {
     try {
@@ -546,6 +571,9 @@ const AdminDashboard = () => {
         <button className={`tab-btn ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => setActiveTab('reviews')}>
           <span className="tab-icon">⭐</span> Reviews
         </button>
+        <button className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`} onClick={() => setActiveTab('requests')}>
+          <span className="tab-icon">⏳</span> Requests {pendingRequests.length > 0 && <span className="notif-badge">{pendingRequests.length}</span>}
+        </button>
       </div>
 
       {/* Main Content Area */}
@@ -581,8 +609,8 @@ const AdminDashboard = () => {
                       const bookingDateTime = new Date((b.booking_date || b.date) + 'T' + (b.booking_time || b.time || '00:00'));
                       const isPast = bookingDateTime < new Date();
                       return (
-                        <tr key={b.id} className={isPast ? 'past-booking' : ''}>
-                          <td>{idx + 1}</td>
+                        <tr key={b.id} className={`${isPast ? 'past-booking' : ''} ${b.reschedule_status === 'pending' ? 'reschedule-pending-row' : ''}`}>
+                          <td>{idx + 1} {b.reschedule_status === 'pending' && <span className="req-tooltip" title="Has pending change request">⏳</span>}</td>
                           <td>
                             <div className="customer-info">
                               <strong>{b.customer_name || b.name || `User ${b.user_id}`}</strong>
@@ -1099,6 +1127,58 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
+          </section>
+        )}
+        {/* Change Requests Tab */}
+        {activeTab === 'requests' && (
+          <section className="content-section">
+            <div className="section-header">
+              <h2>Pending Reschedule Requests</h2>
+              <p>Clients requesting changes to their appointment dates/times.</p>
+            </div>
+            
+            {pendingRequests.length === 0 ? (
+              <div className="empty-state">
+                <span className="empty-icon">✅</span>
+                <p>No pending reschedule requests!</p>
+              </div>
+            ) : (
+              <div className="requests-list">
+                {pendingRequests.map(req => (
+                  <div key={req.id} className="request-card-admin">
+                    <div className="req-header">
+                      <h3>{serviceMap[req.service_id]} for {req.customer_name}</h3>
+                      <span className="req-id">#BK-{req.id}</span>
+                    </div>
+                    <div className="req-comparison">
+                      <div className="req-old">
+                        <span className="req-label">Current:</span>
+                        <div className="req-box">
+                          <span>📅 {req.booking_date}</span>
+                          <span>🕐 {req.booking_time}</span>
+                        </div>
+                      </div>
+                      <div className="req-arrow">➡️</div>
+                      <div className="req-new">
+                        <span className="req-label">Proposed:</span>
+                        <div className="req-box highlight">
+                          <span>📅 {req.requested_date}</span>
+                          <span>🕐 {req.requested_time}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="req-actions">
+                      <button className="approve-btn" onClick={() => handleApproveReschedule(req.id)}>
+                        ✅ Approve & Update
+                      </button>
+                      <button className="reject-btn" onClick={() => handleRejectReschedule(req.id)}>
+                        ❌ Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         )}
       </div>

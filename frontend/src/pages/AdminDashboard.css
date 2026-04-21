@@ -1240,3 +1240,118 @@
   background: #f3f4f6;
   border-color: #9ca3af;
 }
+
+/* Change Requests Styling */
+.notif-badge {
+  background: #ff4757;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  margin-left: 5px;
+}
+
+.reschedule-pending-row {
+  background-color: rgba(243, 156, 18, 0.05);
+}
+
+.req-tooltip {
+  cursor: help;
+  color: #f39c12;
+  margin-left: 4px;
+}
+
+.requests-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 24px;
+  margin-top: 20px;
+}
+
+.request-card-admin {
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+
+.request-card-admin:hover {
+  border-color: #6c2bff;
+  box-shadow: 0 10px 25px rgba(108, 43, 255, 0.1);
+}
+
+.req-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1a0838;
+}
+
+.req-id {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.req-comparison {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 20px 0;
+  padding: 15px;
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+.req-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.req-box.highlight {
+  color: #6c2bff;
+  font-weight: 700;
+}
+
+.req-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.req-arrow {
+  font-size: 1.5rem;
+  color: #cbd5e1;
+}
+
+.req-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.approve-btn, .reject-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.approve-btn {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.reject-btn {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.approve-btn:hover { background: #16a34a; color: #fff; }
+.reject-btn:hover { background: #dc2626; color: #fff; }
+

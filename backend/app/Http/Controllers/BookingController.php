@@ -16,7 +16,7 @@ class BookingController extends Controller
             $query->where('user_id', $userId);
         }
 
-        $bookings = $query->orderBy('booking_date', 'desc')->orderBy('booking_time', 'desc')->get();
+        $bookings = $query->orderBy('created_at', 'desc')->get();
 
         return response()->json(['success' => true, 'bookings' => $bookings]);
     }
@@ -29,34 +29,29 @@ class BookingController extends Controller
         if (!$bookingDate) return response()->json(['success' => false, 'message' => 'Date is required'], 400);
         if (!$serviceId) return response()->json(['success' => false, 'message' => 'Service ID is required'], 400);
 
-        // Fetch availability set by admin
-        $availability = \App\Models\BookingAvailability::where('service_id', $serviceId)
-            ->where('available_date', $bookingDate)
-            ->first();
+        // Business Hours: 9:00 AM to 10:00 PM (1 hour intervals)
+        $businessSlots = [
+            '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', 
+            '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', 
+            '21:00', '22:00'
+        ];
 
-        // If not available, return empty
-        if (!$availability || !$availability->is_available) {
-            return response()->json(['success' => true, 'slots' => []]);
-        }
-
-        $adminSlots = [];
-        if (!empty($availability->available_times)) {
-            $adminSlots = is_string($availability->available_times) ? json_decode($availability->available_times, true) : $availability->available_times;
-        }
-
-        // Remove the default 9 AM - 8:30 PM fallback to only show admin-defined slots.
-        if (empty($adminSlots) || !is_array($adminSlots)) {
-            $adminSlots = [];
-        }
-
-        // Fetch slots already booked for this service on this date
-        $bookedSlots = Booking::where('service_id', $serviceId)->where('booking_date', $bookingDate)->pluck('booking_time')->toArray();
+        // Fetch slots already booked for THIS SPECIFIC service on this date
+        // Normalize times to H:i for comparison
+        $bookedSlots = Booking::where('service_id', $serviceId)
+            ->where('booking_date', $bookingDate)
+            ->where('status', '!=', 'cancelled')
+            ->get(['booking_time'])
+            ->map(function($b) {
+                return date('H:i', strtotime($b->booking_time));
+            })
+            ->toArray();
         
         $allSlots = [];
-        foreach ($adminSlots as $adminSlot) {
+        foreach ($businessSlots as $time) {
             $allSlots[] = [
-                'time' => $adminSlot,
-                'available' => !in_array($adminSlot, $bookedSlots)
+                'time' => $time,
+                'available' => !in_array($time, $bookedSlots)
             ];
         }
 
@@ -86,13 +81,23 @@ class BookingController extends Controller
         $serviceId = $request->service_id ?? $request->serviceId;
         $userId = $request->user_id ?? $request->userID;
 
-        // Check availability
-        $exists = Booking::where('booking_date', $bookingDate)->where('booking_time', $bookingTime)->exists();
+        // Check availability for this specific service with time normalization
+        $normalizedTime = date('H:i', strtotime($bookingTime));
+        $exists = Booking::where('service_id', $serviceId)
+            ->where('booking_date', $bookingDate)
+            ->get(['booking_time'])
+            ->filter(function($b) use ($normalizedTime) {
+                return date('H:i', strtotime($b->booking_time)) === $normalizedTime;
+            })
+            ->isNotEmpty();
+
         if ($exists) {
-            return response()->json(['success' => false, 'message' => 'This slot is already booked. Please choose another one.'], 409);
+            return response()->json(['success' => false, 'message' => 'This service is already booked for this time. Please choose another slot.'], 409);
         }
 
         // Prepare data for database
+        $service = \App\Models\Service::find($serviceId);
+        
         $data = [
             'user_id' => $userId,
             'service_id' => $serviceId,
@@ -102,7 +107,10 @@ class BookingController extends Controller
             'booking_date' => $bookingDate,
             'booking_time' => $bookingTime,
             'notes' => $request->notes ?? '',
-            'status' => 'pending'
+            'status' => 'pending',
+            'amount' => $service ? $service->price : 0,
+            'payment_status' => 'pending',
+            'payment_method' => 'cash'
         ];
 
         $booking = Booking::create($data);
@@ -121,13 +129,27 @@ class BookingController extends Controller
         $service = \App\Models\Service::find($serviceId);
         if ($service) {
             $keywords = array_filter(array_unique(explode(' ', strtolower($service->name . ' ' . $service->category))), function($k) { return strlen($k) > 2; });
-            
-            // Map beautician to makeup if necessary
-            if (in_array('makeup', $keywords)) $keywords[] = 'beautician';
-            if (in_array('beautician', $keywords)) $keywords[] = 'makeup';
+            // Broaden keywords for better staff matching
+            $broadenedKeywords = $keywords;
+            foreach ($keywords as $k) {
+                if ($k === 'hair' || $k === 'dressing' || $k === 'styling') {
+                    $broadenedKeywords[] = 'hair';
+                    $broadenedKeywords[] = 'stylist';
+                    $broadenedKeywords[] = 'styling';
+                }
+                if ($k === 'makeup' || $k === 'beautician' || $k === 'bridal') {
+                    $broadenedKeywords[] = 'makeup';
+                    $broadenedKeywords[] = 'beautician';
+                }
+                if ($k === 'nails' || $k === 'manicure' || $k === 'pedicure') {
+                    $broadenedKeywords[] = 'nails';
+                    $broadenedKeywords[] = 'nails'; // just in case
+                }
+            }
+            $broadenedKeywords = array_unique($broadenedKeywords);
 
-            $relevantStaff = \App\Models\Staff::where(function($q) use ($keywords) {
-                    foreach ($keywords as $keyword) {
+            $relevantStaff = \App\Models\Staff::where(function($q) use ($broadenedKeywords) {
+                    foreach ($broadenedKeywords as $keyword) {
                         $q->orWhere('role', 'LIKE', '%' . $keyword . '%')
                           ->orWhere('specialization', 'LIKE', '%' . $keyword . '%');
                     }
@@ -196,38 +218,146 @@ class BookingController extends Controller
         return response()->json(['success' => true, 'message' => 'Booking updated']);
     }
 
-    public function deleteBooking(Request $request)
+    public function cancelBooking(Request $request)
     {
         $id = $request->id;
-        $booking = Booking::find($id);
+        $booking = Booking::with('service')->find($id);
 
         if (!$booking) {
             return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
         }
 
-        // Notify staff before deletion
-        $bookingWithService = Booking::with('service')->find($id);
-        if ($bookingWithService && $bookingWithService->service) {
-             $service = $bookingWithService->service;
-             $relevantStaff = \App\Models\Staff::where(function($q) use ($service) {
-                $roleSearch = $service->category ?: $service->name;
-                $q->where('role', 'LIKE', '%' . $roleSearch . '%')
-                  ->orWhere('specialization', 'LIKE', '%' . $roleSearch . '%');
-            })->get();
+        $booking->status = 'cancelled';
+        $booking->save();
 
+        // Notify Staff
+        if ($booking->service) {
+            $service = $booking->service;
+            $relevantStaff = $this->getRelevantStaff($service);
             foreach ($relevantStaff as $staff) {
-                 \App\Http\Controllers\NotificationController::createNotification(
+                \App\Http\Controllers\NotificationController::createNotification(
                     null,
                     'Booking Cancelled',
-                    "Booking for " . $service->name . " on " . $bookingWithService->booking_date . " has been cancelled/removed.",
+                    "Booking for " . $service->name . " on " . $booking->booking_date . " has been cancelled.",
                     'warning',
                     $staff->id
                 );
             }
         }
 
-        $booking->delete();
+        return response()->json(['success' => true, 'message' => 'Booking cancelled successfully']);
+    }
 
-        return response()->json(['success' => true, 'message' => 'Booking deleted']);
+    public function requestReschedule(Request $request)
+    {
+        $id = $request->id;
+        $newDate = $request->date;
+        $newTime = $request->time;
+
+        $booking = Booking::find($id);
+        if (!$booking) return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
+
+        $booking->reschedule_status = 'pending';
+        $booking->requested_date = $newDate;
+        $booking->requested_time = $newTime;
+        $booking->save();
+
+        // Notify Admin (General Info)
+        \App\Http\Controllers\NotificationController::createNotification(
+            null,
+            'Reschedule Request',
+            "User " . $booking->customer_name . " requested to change their booking to " . $newDate,
+            'info'
+        );
+
+        return response()->json(['success' => true, 'message' => 'Reschedule request sent to admin for approval']);
+    }
+
+    public function approveReschedule(Request $request)
+    {
+        $id = $request->id;
+        $booking = Booking::with('service')->find($id);
+
+        if (!$booking || $booking->reschedule_status !== 'pending') {
+            return response()->json(['success' => false, 'message' => 'Invalid request'], 400);
+        }
+
+        // Apply changes
+        $booking->booking_date = $booking->requested_date;
+        $booking->booking_time = $booking->requested_time;
+        $booking->reschedule_status = 'approved';
+        $booking->status = 'confirmed'; // Auto-confirm on approval
+        $booking->save();
+
+        // Notify User
+        \App\Http\Controllers\NotificationController::createNotification(
+            $booking->user_id,
+            'Reschedule Approved!',
+            "Your request to change your " . $booking->service->name . " booking to " . $booking->booking_date . " at " . $booking->booking_time . " has been approved.",
+            'success'
+        );
+
+        // Notify Staff
+        $relevantStaff = $this->getRelevantStaff($booking->service);
+        foreach ($relevantStaff as $staff) {
+            \App\Http\Controllers\NotificationController::createNotification(
+                null,
+                'Assignment Rescheduled',
+                "Booking for " . $booking->service->name . " has been rescheduled to " . $booking->booking_date . " at " . $booking->booking_time,
+                'info',
+                $staff->id
+            );
+        }
+
+        return response()->json(['success' => true, 'message' => 'Reschedule approved']);
+    }
+
+    public function rejectReschedule(Request $request)
+    {
+        $id = $request->id;
+        $booking = Booking::find($id);
+        if (!$booking) return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
+
+        $booking->reschedule_status = 'rejected';
+        $booking->save();
+
+        // Notify User
+        \App\Http\Controllers\NotificationController::createNotification(
+            $booking->user_id,
+            'Reschedule Rejected',
+            "Sorry, your request to reschedule your booking has been rejected.",
+            'warning'
+        );
+
+        return response()->json(['success' => true, 'message' => 'Reschedule rejected']);
+    }
+
+    // Helper to avoid code duplication
+    private function getRelevantStaff($service) {
+        $keywords = array_filter(array_unique(explode(' ', strtolower($service->name . ' ' . $service->category))), function($k) { return strlen($k) > 2; });
+        
+        $broadenedKeywords = $keywords;
+        foreach ($keywords as $k) {
+            if ($k === 'hair' || $k === 'dressing' || $k === 'styling') {
+                $broadenedKeywords[] = 'hair';
+                $broadenedKeywords[] = 'stylist';
+                $broadenedKeywords[] = 'styling';
+            }
+            if ($k === 'makeup' || $k === 'beautician' || $k === 'bridal') {
+                $broadenedKeywords[] = 'makeup';
+                $broadenedKeywords[] = 'beautician';
+            }
+            if ($k === 'nails' || $k === 'manicure' || $k === 'pedicure') {
+                $broadenedKeywords[] = 'nails';
+            }
+        }
+        $broadenedKeywords = array_unique($broadenedKeywords);
+
+        return \App\Models\Staff::where(function($q) use ($broadenedKeywords) {
+                foreach ($broadenedKeywords as $keyword) {
+                    $q->orWhere('role', 'LIKE', '%' . $keyword . '%')
+                      ->orWhere('specialization', 'LIKE', '%' . $keyword . '%');
+                }
+            })->get();
     }
 }
