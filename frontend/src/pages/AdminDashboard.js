@@ -1,9 +1,19 @@
+import { io } from 'socket.io-client';
 import React, { useEffect, useState } from 'react';
 import './AdminDashboard.css';
 import axios from '../api/axiosConfig';
 import { useToast } from '../components/ToastContainer';
+import ChatWidget from '../components/ChatWidget';
 
 const AdminDashboard = () => {
+  const roles = [
+    { value: 'stylist', label: 'Hair Stylist' },
+    { value: 'beautician', label: 'Beautician' },
+    { value: 'therapist', label: 'Massage Therapist' },
+    { value: 'manager', label: 'Salon Manager' }
+  ];
+
+  const categories = ['Hair', 'Makeup', 'Skin', 'Nails', 'Massage', 'Spa'];
   const { showSuccess, showError, showWarning } = useToast();
   const [bookings, setBookings] = useState([]);
   const [services, setServices] = useState([]);
@@ -15,71 +25,49 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({ total: 0, upcoming: 0, past: 0, confirmed: 0, totalStaff: 0, activeStaff: 0, totalUsers: 0 });
   const [activeTab, setActiveTab] = useState('bookings');
-  
-  // Confirmation Modal State
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  
-  // Service Form State
   const [showServiceForm, setShowServiceForm] = useState(false);
   const [serviceForm, setServiceForm] = useState({ 
     service_name: '', 
-    category: 'Hair',
+    category: 'Hair', 
     description: '', 
     price: '', 
-    duration: '30 mins',
-    image_url: '',
-    icon: '💇',
-    is_active: 1
+    duration: '30 mins', 
+    image_url: '', 
+    icon: '💇', 
+    is_active: 1 
   });
   const [editingServiceId, setEditingServiceId] = useState(null);
-
-  // Staff Form State
   const [showStaffForm, setShowStaffForm] = useState(false);
-  const [staffForm, setStaffForm] = useState({
-    employee_id: '',
-    full_name: '',
-    email: '',
-    phone: '',
-    role: 'stylist',
-    specialization: '',
-    experience_years: 0,
-    salary: '',
-    bio: '',
-    password: '',
-    profile_image: null
+  const [staffForm, setStaffForm] = useState({ 
+    full_name: '', 
+    email: '', 
+    phone: '', 
+    role: '', 
+    specialization: '', 
+    experience: '', 
+    bio: '', 
+    profile_image: '', 
+    password: '', 
+    is_active: 1 
   });
   const [editingStaffId, setEditingStaffId] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+    const [unreadMessages, setUnreadMessages] = useState({}); // {userId: count}
+  const adminUser = JSON.parse(localStorage.getItem('user') || '{"id": 5, "name": "Admin"}');
 
-  // Sample staff data (would come from API in production)
-  const sampleStaff = [
-    { id: 1, employee_id: 'EMP001', full_name: 'Maria Santos', email: 'maria@glamconnect.com', phone: '+923001234001', role: 'stylist', specialization: 'Hair Coloring & Styling', experience_years: 8, salary: 75000, rating: 4.9, total_services: 342, is_active: true, profile_image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop' },
-    { id: 2, employee_id: 'EMP002', full_name: 'Ayesha Khan', email: 'ayesha@glamconnect.com', phone: '+923001234002', role: 'beautician', specialization: 'Bridal Makeup', experience_years: 6, salary: 65000, rating: 4.8, total_services: 289, is_active: true, profile_image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop' },
-    { id: 3, employee_id: 'EMP003', full_name: 'Fatima Ali', email: 'fatima@glamconnect.com', phone: '+923001234003', role: 'therapist', specialization: 'Spa & Wellness', experience_years: 5, salary: 55000, rating: 4.7, total_services: 198, is_active: true, profile_image: 'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=150&h=150&fit=crop' },
-    { id: 4, employee_id: 'EMP004', full_name: 'Zara Ahmed', email: 'zara@glamconnect.com', phone: '+923001234004', role: 'nail_artist', specialization: 'Nail Art Design', experience_years: 4, salary: 45000, rating: 4.9, total_services: 456, is_active: true, profile_image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop' },
-    { id: 5, employee_id: 'EMP005', full_name: 'Hina Malik', email: 'hina@glamconnect.com', phone: '+923001234005', role: 'beautician', specialization: 'Skincare & Facials', experience_years: 7, salary: 60000, rating: 4.6, total_services: 267, is_active: false, profile_image: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop' },
-  ];
-
-  const categories = ['Hair', 'Nails', 'Makeup', 'Skincare', 'Spa'];
-  const roles = [
-    { value: 'hair', label: 'Hair' },
-    { value: 'makeup', label: 'Makeup' },
-    { value: 'nails', label: 'Nails' },
-    { value: 'skincare', label: 'Skincare' },
-    { value: 'spa', label: 'Spa' }
-  ];
-
-  const fetchBookings = async (silent = false) => {
-    if (!silent) setLoading(true);
+  const fetchBookings = async () => {
+    setLoading(true);
     try {
       const resp = await axios.post('/bookings/get-all');
       if (resp.data && resp.data.success) {
         setBookings(resp.data.bookings || []);
       }
     } catch (err) {
-      console.error('Error fetching bookings:', err);
+      console.error('Error fetching bookings', err);
     } finally {
-      if (!silent) setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -87,14 +75,11 @@ const AdminDashboard = () => {
     try {
       const resp = await axios.post('/services/get-all');
       if (resp.data && resp.data.success) {
-        const servicesList = resp.data.services || [];
-        setServices(servicesList);
-        // Create lookup map for service names
-        const map = {};
-        servicesList.forEach(s => {
-          map[s.id] = s.service_name || 'Unknown Service';
-        });
-        setServiceMap(map);
+        const servList = resp.data.services || [];
+        setServices(servList);
+        const mapping = {};
+        servList.forEach(s => mapping[s.id] = s.name);
+        setServiceMap(mapping);
       }
     } catch (err) {
       console.error('Error fetching services', err);
@@ -145,7 +130,8 @@ const AdminDashboard = () => {
     }
   };
 
-  useEffect(() => { 
+  useEffect(() => {
+    fetchUnreadCounts();
     fetchBookings();
     fetchServices();
     fetchStaff();
@@ -153,6 +139,51 @@ const AdminDashboard = () => {
     fetchAttendance();
     fetchReviews();
   }, []);
+
+  const fetchUnreadCounts = async () => {
+    try {
+      const response = await axios.post('/chat/get-unread', {
+        receiver_id: 5,
+        receiver_type: 'admin'
+      });
+      if (response.data.success) {
+        setUnreadMessages(response.data.unread_counts);
+      }
+    } catch (err) {
+      console.error('Error fetching unread counts:', err);
+    }
+  };
+
+  useEffect(() => {
+    const socket = io('http://localhost:5001');
+    socket.emit('join', 'admin_5');
+    socket.on('receive_message', (msg) => {
+      if (msg.sender_type === 'user') {
+        setUnreadMessages(prev => ({ ...prev, [msg.sender_id]: (prev[msg.sender_id] || 0) + 1 }));
+      }
+    });
+    return () => socket.disconnect();
+  }, []);
+
+  
+
+  useEffect(() => {
+    if (activeTab === 'chats' && selectedUser) {
+      // Mark as read in DB
+      axios.post('/chat/mark-read', {
+        sender_id: selectedUser.id,
+        sender_type: 'user',
+        receiver_id: 5,
+        receiver_type: 'admin'
+      });
+
+      setUnreadMessages(prev => {
+        const next = { ...prev };
+        delete next[selectedUser.id];
+        return next;
+      });
+    }
+  }, [activeTab, selectedUser]);
 
   // Real-time polling for all tabs to reflect manual DB changes
   useEffect(() => {
@@ -573,6 +604,9 @@ const AdminDashboard = () => {
         </button>
         <button className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`} onClick={() => setActiveTab('requests')}>
           <span className="tab-icon">⏳</span> Requests {pendingRequests.length > 0 && <span className="notif-badge">{pendingRequests.length}</span>}
+        </button>
+        <button className={`tab-btn ${activeTab === 'chats' ? 'active' : ''}`} onClick={() => setActiveTab('chats')}>
+          <span className="tab-icon">💬</span> Chats {Object.values(unreadMessages).reduce((a, b) => a + b, 0) > 0 && <span className="notif-badge">{Object.values(unreadMessages).reduce((a, b) => a + b, 0)}</span>}
         </button>
       </div>
 
@@ -1179,6 +1213,43 @@ const AdminDashboard = () => {
                 ))}
               </div>
             )}
+          </section>
+        )}
+
+        {activeTab === 'chats' && (
+          <section className="content-section">
+            <div className="section-header">
+              <h2>Customer Chat Support</h2>
+            </div>
+            <div className="chat-dashboard-container" style={{display: 'flex', gap: '2rem', height: '600px'}}>
+                <div className="chat-user-list" style={{width: '300px', overflowY: 'auto', background: '#f9f9f9', borderRadius: '15px', padding: '1rem', border: '1px solid #eee'}}>
+                    {users.map(user => (
+                        <div key={user.id} className={`chat-user-item ${selectedUser?.id === user.id ? 'active' : ''}`} 
+                             onClick={() => setSelectedUser(user)}
+                             style={{padding: '1rem', marginBottom: '0.5rem', borderRadius: '10px', cursor: 'pointer', background: selectedUser?.id === user.id ? '#6c2bff' : 'white', color: selectedUser?.id === user.id ? 'white' : 'black', boxShadow: '0 2px 5px rgba(0,0,0,0.05)'}}>
+                            <div style={{fontWeight: '600', display: 'flex', justifyContent: 'space-between'}}>
+                                {user.name}
+                                {unreadMessages[user.id] > 0 && <span style={{background: '#ff4757', color: 'white', borderRadius: '50%', padding: '2px 8px', fontSize: '0.7rem'}}>{unreadMessages[user.id]}</span>}
+                            </div>
+                            <div style={{fontSize: '0.8rem', opacity: 0.8}}>{user.email}</div>
+                        </div>
+                    ))}
+                </div>
+                <div className="chat-main-area" style={{flex: 1, position: 'relative', background: '#f0f2f5', borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #ddd'}}>
+                    {selectedUser ? (
+                        <ChatWidget 
+                            currentUser={adminUser}
+                            receiverId={selectedUser.id}
+                            receiverType="user"
+                            isAdmin={true}
+                        />
+                    ) : (
+                        <div className="no-chat-selected">
+                            <p style={{fontSize: '1.2rem', color: '#888'}}>Select a client to start chatting</p>
+                        </div>
+                    )}
+                </div>
+            </div>
           </section>
         )}
       </div>

@@ -48,6 +48,7 @@ Route::prefix('bookings')->group(function () {
     Route::post('/request-reschedule', [BookingController::class, 'requestReschedule']);
     Route::post('/approve-reschedule', [BookingController::class, 'approveReschedule']);
     Route::post('/reject-reschedule', [BookingController::class, 'rejectReschedule']);
+    Route::post('/delete', [BookingController::class, 'deleteBooking']);
 });
 
 Route::prefix('services')->group(function () {
@@ -82,4 +83,10 @@ Route::prefix('reviews')->group(function () {
     Route::get('/service/{service_id}', [ReviewController::class, 'getServiceReviews']);
     Route::post('/get-all', [ReviewController::class, 'getAllReviews']);
     Route::post('/get-staff', [ReviewController::class, 'getStaffReviews']);
+});
+
+Route::prefix('chat')->group(function () {
+    Route::post('/history', [\App\Http\Controllers\ChatController::class, 'getHistory']);
+    Route::post('/mark-read', [\App\Http\Controllers\ChatController::class, 'markRead']);
+    Route::post('/get-unread', [\App\Http\Controllers\ChatController::class, 'getUnreadCounts']);
 });
