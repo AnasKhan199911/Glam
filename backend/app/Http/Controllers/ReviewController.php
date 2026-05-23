@@ -64,4 +64,18 @@ class ReviewController extends Controller
 
         return response()->json(['success' => true, 'reviews' => $reviews]);
     }
+
+    public function deleteReview(Request $request)
+    {
+        try {
+            $review = \App\Models\Review::find($request->id);
+            if (!$review) {
+                return response()->json(['success' => false, 'message' => 'Review not found'], 404);
+            }
+            $review->delete();
+            return response()->json(['success' => true, 'message' => 'Review deleted successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to delete review: ' . $e->getMessage()], 500);
+        }
+    }
 }

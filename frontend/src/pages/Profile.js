@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from '../api/axiosConfig';
 import './Profile.css';
 
@@ -13,6 +13,7 @@ const Profile = () => {
   const [editNotes, setEditNotes] = useState('');
   const [statusMessage, setStatusMessage] = useState({ text: '', type: '' });
   const [activeTab, setActiveTab] = useState('bookings');
+  const paymentVerifiedRef = useRef(false);
   const [notifications, setNotifications] = useState([]);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackForm, setFeedbackForm] = useState({ service_id: '', rating: 5, comment: '' });
@@ -34,6 +35,40 @@ const Profile = () => {
 
     return () => clearInterval(updateInterval);
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const params = new URLSearchParams(window.location.search);
+    const paymentSuccess = params.get('payment_success');
+    const bookingId = params.get('booking_id');
+    const sessionId = params.get('session_id');
+
+    if (paymentSuccess === 'true' && bookingId && sessionId && !paymentVerifiedRef.current) {
+      paymentVerifiedRef.current = true;
+      const verifyPayment = async () => {
+        try {
+          setStatusMessage({ text: 'Confirming payment with Stripe...', type: 'info' });
+          const resp = await axios.post('/payment/confirm-payment', { booking_id: bookingId, session_id: sessionId });
+          if (resp.data && resp.data.success) {
+            setStatusMessage({ text: 'Payment confirmed! Confirmation email sent.', type: 'success' });
+            window.history.replaceState({}, document.title, window.location.pathname);
+            fetchBookings();
+            fetchNotifications();
+          } else {
+            setStatusMessage({ text: resp.data.message || 'Payment verification failed.', type: 'error' });
+            paymentVerifiedRef.current = false; // Reset to allow retry if it wasn't successful
+          }
+        } catch (err) {
+          console.error('Payment confirmation error:', err);
+          const errorMsg = err.response?.data?.message || 'Error confirming payment. Please contact support.';
+          setStatusMessage({ text: errorMsg, type: 'error' });
+          paymentVerifiedRef.current = false; // Reset to allow retry on error
+        }
+      };
+      verifyPayment();
+    }
+  }, []);
+
 
   const fetchServices = async () => {
     try {
@@ -205,6 +240,22 @@ const Profile = () => {
     }
   };
 
+  const handlePayment = async (bookingId) => {
+    try {
+      setStatusMessage({ text: 'Redirecting to Stripe checkout...', type: 'info' });
+      const resp = await axios.post('/payment/create-checkout-session', { booking_id: bookingId });
+      if (resp.data && resp.data.success && resp.data.url) {
+        window.location.href = resp.data.url;
+      } else {
+        setStatusMessage({ text: resp.data.message || 'Payment initiation failed', type: 'error' });
+      }
+    } catch (err) {
+      console.error('Payment error:', err);
+      setStatusMessage({ text: err.response?.data?.message || 'Error connecting to Stripe', type: 'error' });
+    }
+  };
+
+
 
 
   if (!user) {
@@ -262,6 +313,11 @@ const Profile = () => {
                       <p>📅 {booking.booking_date || booking.date} | 🕐 {formatTime12h(booking.booking_time || booking.time)}</p>
                       <p className={`status-text status-${booking.status?.toLowerCase() || 'pending'}`}>
                         {booking.status || 'Pending'}
+                        {booking.payment_status === 'paid' ? (
+                          <span className="payment-badge-pill paid">✓ Paid</span>
+                        ) : (
+                          <span className="payment-badge-pill unpaid">Unpaid</span>
+                        )}
                       </p>
                       {booking.reschedule_status === 'pending' && <p className="reschedule-pending-tag">⏳ Reschedule pending admin approval</p>}
                     </div>
@@ -278,6 +334,11 @@ const Profile = () => {
                       </div>
                     ) : (
                       <div className="booking-actions">
+                        {booking.status === 'confirmed' && booking.payment_status !== 'paid' && (
+                          <button className="pay-now-btn" onClick={() => handlePayment(booking.id)} title="Pay via Stripe">
+                            💳 Pay Now
+                          </button>
+                        )}
                         {booking.status !== 'cancelled' && booking.status !== 'completed' && (
                           <>
                             <button className="edit-btn" onClick={() => startEdit(booking)} title="Request Reschedule">

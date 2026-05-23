@@ -83,6 +83,7 @@ Route::prefix('reviews')->group(function () {
     Route::get('/service/{service_id}', [ReviewController::class, 'getServiceReviews']);
     Route::post('/get-all', [ReviewController::class, 'getAllReviews']);
     Route::post('/get-staff', [ReviewController::class, 'getStaffReviews']);
+    Route::post('/delete', [ReviewController::class, 'deleteReview']);
 });
 
 Route::prefix('chat')->group(function () {
@@ -90,3 +91,9 @@ Route::prefix('chat')->group(function () {
     Route::post('/mark-read', [\App\Http\Controllers\ChatController::class, 'markRead']);
     Route::post('/get-unread', [\App\Http\Controllers\ChatController::class, 'getUnreadCounts']);
 });
+
+Route::prefix('payment')->group(function () {
+    Route::post('/create-checkout-session', [\App\Http\Controllers\PaymentController::class, 'createCheckoutSession']);
+    Route::post('/confirm-payment', [\App\Http\Controllers\PaymentController::class, 'confirmPayment']);
+});
+

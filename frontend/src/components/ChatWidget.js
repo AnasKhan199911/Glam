@@ -21,23 +21,40 @@ const ChatWidget = ({ currentUser, receiverId, receiverType, isAdmin = false }) 
         if (!currentUser || !currentUser.id || !receiverId) return;
 
         console.log(`[Chat] Initializing socket for ${isAdmin ? 'admin' : 'user'} ${currentUser.id}`);
-        socketRef.current = io(SOCKET_URL);
+        socketRef.current = io(SOCKET_URL, {
+            transports: ['websocket'],
+            reconnectionAttempts: 5
+        });
 
-        // Join personal room
-        const myRoom = `${isAdmin ? 'admin' : 'user'}_${currentUser.id}`;
-        socketRef.current.emit('join', myRoom);
-        console.log(`[Chat] Joined room: ${myRoom}`);
+        socketRef.current.on('connect', () => {
+            console.log('[Chat] Socket connected:', socketRef.current.id);
+            joinRoom();
+        });
+
+        const joinRoom = () => {
+            const myRoom = `${isAdmin ? 'admin' : 'user'}_${currentUser.id}`;
+            socketRef.current.emit('join', myRoom);
+            console.log(`[Chat] Joining room: ${myRoom} (Socket: ${socketRef.current.id})`);
+        };
+
+        if (socketRef.current.connected) {
+            joinRoom();
+        }
 
         // Fetch history
         fetchHistory();
 
+        console.log(`[Chat] Widget initialized. Sender: ${currentUser.id}, Receiver: ${receiverId}`);
+
         // Listen for messages
         socketRef.current.on('receive_message', (message) => {
-            console.log('[Chat] Received message:', message);
+            console.log('[Chat] Incoming message event:', message);
             // Loose equality check for IDs
             if (String(message.sender_id) === String(receiverId) && message.sender_type === receiverType) {
                 setMessages((prev) => [...prev, message]);
                 if (!isOpen && !isAdmin) setUnreadCount((prev) => prev + 1);
+            } else {
+                console.log('[Chat] Message ignored (wrong conversation):', message.sender_id, 'vs', receiverId);
             }
         });
 

@@ -1364,3 +1364,23 @@
 .approve-btn:hover { background: #16a34a; color: #fff; }
 .reject-btn:hover { background: #dc2626; color: #fff; }
 
+.delete-btn {
+  padding: 8px 16px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fee2e2;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+}
+
+.delete-btn:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+}
+
+

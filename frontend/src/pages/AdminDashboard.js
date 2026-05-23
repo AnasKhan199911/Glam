@@ -143,7 +143,7 @@ const AdminDashboard = () => {
   const fetchUnreadCounts = async () => {
     try {
       const response = await axios.post('/chat/get-unread', {
-        receiver_id: 5,
+        receiver_id: adminUser?.id || 5,
         receiver_type: 'admin'
       });
       if (response.data.success) {
@@ -156,14 +156,15 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const socket = io('http://localhost:5001');
-    socket.emit('join', 'admin_5');
+    const adminId = adminUser?.id || 5;
+    socket.emit('join', `admin_${adminId}`);
     socket.on('receive_message', (msg) => {
       if (msg.sender_type === 'user') {
         setUnreadMessages(prev => ({ ...prev, [msg.sender_id]: (prev[msg.sender_id] || 0) + 1 }));
       }
     });
     return () => socket.disconnect();
-  }, []);
+  }, [adminUser.id]);
 
   
 
@@ -173,7 +174,7 @@ const AdminDashboard = () => {
       axios.post('/chat/mark-read', {
         sender_id: selectedUser.id,
         sender_type: 'user',
-        receiver_id: 5,
+        receiver_id: adminUser?.id || 5,
         receiver_type: 'admin'
       });
 
@@ -386,6 +387,14 @@ const AdminDashboard = () => {
           fetchUsers();
         } else {
           showError(resp.data?.message || 'Failed to delete user');
+        }
+      } else if (deleteTarget.type === 'review') {
+        const resp = await axios.post('/reviews/delete', { id: deleteTarget.id });
+        if (resp.data && resp.data.success) {
+          showSuccess('Review deleted successfully!');
+          fetchReviews();
+        } else {
+          showError(resp.data?.message || 'Failed to delete review');
         }
       }
     } catch (err) {
@@ -1133,12 +1142,13 @@ const AdminDashboard = () => {
                     <th>Rating</th>
                     <th>Comment</th>
                     <th>Date</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {reviews.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="empty-row">No reviews yet</td>
+                      <td colSpan="7" className="empty-row">No reviews yet</td>
                     </tr>
                   ) : (
                     reviews.map((r, idx) => (
@@ -1155,6 +1165,9 @@ const AdminDashboard = () => {
                         </td>
                         <td style={{fontStyle: 'italic', maxWidth: '300px'}}>"{r.comment}"</td>
                         <td>{new Date(r.created_at).toLocaleDateString()}</td>
+                        <td>
+                          <button className="delete-btn" onClick={() => { setDeleteTarget({ type: 'review', id: r.id }); setShowDeleteModal(true); }}>🗑️ Delete</button>
+                        </td>
                       </tr>
                     ))
                   )}
