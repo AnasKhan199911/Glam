@@ -16,6 +16,15 @@ class NotificationController extends Controller
         return response()->json(['success' => true, 'notifications' => $notifications]);
     }
 
+    public function getAdminNotifications(Request $request)
+    {
+        $adminId = $request->admin_id;
+        $notifications = \App\Models\Notification::where('admin_id', $adminId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        return response()->json(['success' => true, 'notifications' => $notifications]);
+    }
+
     public function getStaffNotifications(Request $request)
     {
         $staffId = $request->staff_id;
@@ -38,12 +47,17 @@ class NotificationController extends Controller
 
     public static function createNotification($userId, $title, $message, $type = 'info', $staffId = null)
     {
-        return \App\Models\Notification::create([
-            'user_id' => $userId,
-            'staff_id' => $staffId,
-            'title' => $title,
-            'message' => $message,
-            'type' => $type
-        ]);
+        try {
+            return \App\Models\Notification::create([
+                'user_id' => $userId,
+                'staff_id' => $staffId,
+                'title' => $title,
+                'message' => $message,
+                'type' => $type
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Notification creation failed for user_id: ' . $userId . ' - ' . $e->getMessage());
+            return null;
+        }
     }
 }

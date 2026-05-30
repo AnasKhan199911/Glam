@@ -15,7 +15,6 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [reviews, setReviews] = useState([]);
-  const [adminNotifs, setAdminNotifs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({ total: 0, upcoming: 0, past: 0, confirmed: 0, totalStaff: 0, activeStaff: 0, totalUsers: 0 });
   const [activeTab, setActiveTab] = useState('bookings');
@@ -124,26 +123,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const fetchAdminNotifs = async () => {
-    try {
-      const resp = await axios.post('/notifications/get-all', { user_id: adminUser?.id || 5 });
-      if (resp.data && resp.data.success) {
-        setAdminNotifs(resp.data.notifications || []);
-      }
-    } catch (err) {
-      console.error('Error fetching admin notifications', err);
-    }
-  };
-
-  const markAdminNotifRead = async (id) => {
-    try {
-      await axios.post('/notifications/mark-read', { id });
-      setAdminNotifs(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
     fetchUnreadCounts();
     fetchBookings();
@@ -152,7 +131,6 @@ const AdminDashboard = () => {
     fetchUsers();
     fetchAttendance();
     fetchReviews();
-    fetchAdminNotifs();
   }, []);
 
   const fetchUnreadCounts = async () => {
@@ -212,7 +190,6 @@ const AdminDashboard = () => {
       fetchUsers(true);
       fetchAttendance(true);
       fetchReviews(true);
-      fetchAdminNotifs();
     }, 10000); 
     
     return () => clearInterval(interval);
@@ -634,9 +611,6 @@ const AdminDashboard = () => {
         </button>
         <button className={`tab-btn ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => setActiveTab('reviews')}>
           <span className="tab-icon">⭐</span> Reviews
-        </button>
-        <button className={`tab-btn ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => setActiveTab('notifications')}>
-          <span className="tab-icon">🔔</span> Notifications {adminNotifs.filter(n => !n.is_read).length > 0 && <span className="notif-badge">{adminNotifs.filter(n => !n.is_read).length}</span>}
         </button>
         <button className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`} onClick={() => setActiveTab('requests')}>
           <span className="tab-icon">⏳</span> Requests {pendingRequests.length > 0 && <span className="notif-badge">{pendingRequests.length}</span>}
@@ -1249,53 +1223,6 @@ const AdminDashboard = () => {
             </div>
           </section>
         )}
-        {/* Admin Notifications Tab */}
-        {activeTab === 'notifications' && (
-          <section className="content-section">
-            <div className="section-header">
-              <h2>Notifications</h2>
-              <button className="refresh-btn" onClick={fetchAdminNotifs}>🔄 Refresh</button>
-            </div>
-            {adminNotifs.length === 0 ? (
-              <div className="empty-state">
-                <span className="empty-icon">🔔</span>
-                <p>No notifications yet</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {adminNotifs.map(n => (
-                  <div
-                    key={n.id}
-                    onClick={() => !n.is_read && markAdminNotifRead(n.id)}
-                    style={{
-                      padding: '14px 18px',
-                      borderRadius: 10,
-                      background: n.is_read ? '#f9fafb' : '#eff6ff',
-                      border: n.is_read ? '1px solid #e5e7eb' : '1px solid #bfdbfe',
-                      cursor: n.is_read ? 'default' : 'pointer',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      gap: 12
-                    }}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: '#1e293b', marginBottom: 4 }}>
-                        {!n.is_read && <span style={{ display: 'inline-block', width: 8, height: 8, background: '#3b82f6', borderRadius: '50%', marginRight: 8 }} />}
-                        {n.title}
-                      </div>
-                      <div style={{ fontSize: 13, color: '#475569' }}>{n.message}</div>
-                    </div>
-                    <div style={{ fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap' }}>
-                      {new Date(n.created_at).toLocaleString('en-PK', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-        )}
-
         {/* Change Requests Tab */}
         {activeTab === 'requests' && (
           <section className="content-section">

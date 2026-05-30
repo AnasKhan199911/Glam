@@ -68,16 +68,28 @@ const Profile = () => {
           const resp = await axios.post('/payment/confirm-payment', { booking_id: bookingId, session_id: sessionId });
           if (resp.data && resp.data.success) {
             setStatusMessage({ text: 'Payment confirmed! Confirmation email sent.', type: 'success' });
+            // Auto-clear success message after 3 seconds
+            setTimeout(() => {
+              setStatusMessage({ text: '', type: '' });
+            }, 3000);
             window.history.replaceState({}, document.title, window.location.pathname);
             fetchBookings();
             fetchNotifications();
           } else {
             setStatusMessage({ text: resp.data.message || 'Payment verification failed.', type: 'error' });
+            // Auto-clear error message after 5 seconds
+            setTimeout(() => {
+              setStatusMessage({ text: '', type: '' });
+            }, 5000);
             paymentVerifiedRef.current = false;
           }
         } catch (err) {
           const errorMsg = err.response?.data?.message || 'Error confirming payment. Please contact support.';
           setStatusMessage({ text: errorMsg, type: 'error' });
+          // Auto-clear error message after 5 seconds
+          setTimeout(() => {
+            setStatusMessage({ text: '', type: '' });
+          }, 5000);
           paymentVerifiedRef.current = false;
         }
       };

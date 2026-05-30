@@ -115,25 +115,50 @@ class PaymentController extends Controller
                 $amountFmt  = number_format($booking->amount);
                 $clientName = $booking->customer_name ?: ($booking->user ? $booking->user->name : 'Client');
 
-                // In-app notification for the user
-                if ($booking->user_id) {
-                    \App\Http\Controllers\NotificationController::createNotification(
-                        $booking->user_id,
-                        'Payment Successful!',
-                        "Your payment of Rs. {$amountFmt} for {$serviceName} has been received. Booking ID: BK-{$booking->id}.",
-                        'appointment'
-                    );
-                }
+                try {
+                    // In-app notification for the user
+                    if ($booking->user_id) {
+                        \App\Http\Controllers\NotificationController::createNotification(
+                            $booking->user_id,
+                            'Payment Successful!',
+                            "Your payment of Rs. {$amountFmt} for {$serviceName} has been received. Booking ID: BK-{$booking->id}.",
+                            'appointment'
+                        );
+                    }
 
-                // In-app notification for admin (find user with role admin)
-                $admin = \App\Models\User::where('role', 'admin')->first();
-                if ($admin) {
-                    \App\Http\Controllers\NotificationController::createNotification(
-                        $admin->id,
-                        '💳 Payment Received',
-                        "Rs. {$amountFmt} received from {$clientName} for {$serviceName} (BK-{$booking->id}).",
-                        'appointment'
-                    );
+                    // In-app notification for admin
+                    // First check AdminUser table
+                    $admin = \App\Models\AdminUser::where('is_active', 1)->first();
+                    if (!$admin) {
+                        // Fall back to checking User table with role='admin'
+                        $admin = \App\Models\User::where('role', 'admin')->first();
+                    }
+                    
+                    if ($admin) {
+                        Log::info('Creating notification for admin user ID: ' . $admin->id);
+                        if ($admin instanceof \App\Models\AdminUser) {
+                            // Create notification with admin_id
+                            \App\Models\Notification::create([
+                                'admin_id' => $admin->id,
+                                'title' => '💳 Payment Received',
+                                'message' => "Rs. {$amountFmt} received from {$clientName} for {$serviceName} (BK-{$booking->id}).",
+                                'type' => 'appointment'
+                            ]);
+                        } else {
+                            // Create notification with user_id
+                            \App\Http\Controllers\NotificationController::createNotification(
+                                $admin->id,
+                                '💳 Payment Received',
+                                "Rs. {$amountFmt} received from {$clientName} for {$serviceName} (BK-{$booking->id}).",
+                                'appointment'
+                            );
+                        }
+                    } else {
+                        Log::warning('No admin user found in either admin_users or users table');
+                    }
+                } catch (\Exception $notifyEx) {
+                    Log::error('Notification creation failed: ' . $notifyEx->getMessage());
+                    // Continue even if notifications fail
                 }
 
                 // Send email notification to user
@@ -162,12 +187,18 @@ class PaymentController extends Controller
                             . "Best regards,\n"
                             . "GlamConnect Team";
 
-                        \Illuminate\Support\Facades\Mail::raw($emailContent, function ($message) use ($email, $name) {
-                            $message->to($email, $name)
-                                    ->subject('GlamConnect - Payment Confirmation & Booking Details');
-                        });
+                        // Send email asynchronously to prevent blocking
+                        if (!env('MAIL_HOST') || env('MAIL_HOST') === 'localhost') {
+                            Log::info('Email notification (mail not configured): ' . $email);
+                        } else {
+                            \Illuminate\Support\Facades\Mail::raw($emailContent, function ($message) use ($email, $name) {
+                                $message->to($email, $name)
+                                        ->subject('GlamConnect - Payment Confirmation & Booking Details');
+                            });
+                        }
                     } catch (\Exception $mailEx) {
                         Log::error('Mail sending failed after payment: ' . $mailEx->getMessage());
+                        // Don't fail the payment confirmation if email fails
                     }
                 }
 

@@ -74,6 +74,7 @@ Route::prefix('attendance')->group(function () {
 
 Route::prefix('notifications')->group(function () {
     Route::post('/get-all', [NotificationController::class, 'getUserNotifications']);
+    Route::post('/get-admin', [NotificationController::class, 'getAdminNotifications']);
     Route::post('/get-staff', [NotificationController::class, 'getStaffNotifications']);
     Route::post('/mark-read', [NotificationController::class, 'markAsRead']);
 });
