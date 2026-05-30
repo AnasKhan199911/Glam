@@ -6,13 +6,6 @@ import { useToast } from '../components/ToastContainer';
 import ChatWidget from '../components/ChatWidget';
 
 const AdminDashboard = () => {
-  const roles = [
-    { value: 'stylist', label: 'Hair Stylist' },
-    { value: 'beautician', label: 'Beautician' },
-    { value: 'therapist', label: 'Massage Therapist' },
-    { value: 'manager', label: 'Salon Manager' }
-  ];
-
   const categories = ['Hair', 'Makeup', 'Skin', 'Nails', 'Massage', 'Spa'];
   const { showSuccess, showError, showWarning } = useToast();
   const [bookings, setBookings] = useState([]);
@@ -22,6 +15,7 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [adminNotifs, setAdminNotifs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({ total: 0, upcoming: 0, past: 0, confirmed: 0, totalStaff: 0, activeStaff: 0, totalUsers: 0 });
   const [activeTab, setActiveTab] = useState('bookings');
@@ -130,6 +124,26 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchAdminNotifs = async () => {
+    try {
+      const resp = await axios.post('/notifications/get-all', { user_id: adminUser?.id || 5 });
+      if (resp.data && resp.data.success) {
+        setAdminNotifs(resp.data.notifications || []);
+      }
+    } catch (err) {
+      console.error('Error fetching admin notifications', err);
+    }
+  };
+
+  const markAdminNotifRead = async (id) => {
+    try {
+      await axios.post('/notifications/mark-read', { id });
+      setAdminNotifs(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchUnreadCounts();
     fetchBookings();
@@ -138,6 +152,7 @@ const AdminDashboard = () => {
     fetchUsers();
     fetchAttendance();
     fetchReviews();
+    fetchAdminNotifs();
   }, []);
 
   const fetchUnreadCounts = async () => {
@@ -197,6 +212,7 @@ const AdminDashboard = () => {
       fetchUsers(true);
       fetchAttendance(true);
       fetchReviews(true);
+      fetchAdminNotifs();
     }, 10000); 
     
     return () => clearInterval(interval);
@@ -534,6 +550,14 @@ const AdminDashboard = () => {
     setShowStaffForm(false);
   };
 
+  // Each service becomes a role — staff role = exact service name
+  const roles = services.length > 0
+    ? services.map(s => ({
+        value: s.service_name || s.name,
+        label: s.service_name || s.name
+      }))
+    : [];
+
   const getRoleLabel = (role) => {
     const found = roles.find(r => r.value === role);
     return found ? found.label : role;
@@ -611,6 +635,9 @@ const AdminDashboard = () => {
         <button className={`tab-btn ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => setActiveTab('reviews')}>
           <span className="tab-icon">⭐</span> Reviews
         </button>
+        <button className={`tab-btn ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => setActiveTab('notifications')}>
+          <span className="tab-icon">🔔</span> Notifications {adminNotifs.filter(n => !n.is_read).length > 0 && <span className="notif-badge">{adminNotifs.filter(n => !n.is_read).length}</span>}
+        </button>
         <button className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`} onClick={() => setActiveTab('requests')}>
           <span className="tab-icon">⏳</span> Requests {pendingRequests.length > 0 && <span className="notif-badge">{pendingRequests.length}</span>}
         </button>
@@ -644,6 +671,7 @@ const AdminDashboard = () => {
                       <th>Service</th>
                       <th>Date & Time</th>
                       <th>Status</th>
+                      <th>Payment</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -671,6 +699,17 @@ const AdminDashboard = () => {
                             <span className={`status-badge ${b.status || 'pending'}`}>
                               {(b.status || 'pending').toUpperCase()}
                             </span>
+                          </td>
+                          <td>
+                            {b.payment_status === 'paid' ? (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#dcfce7', color: '#16a34a', borderRadius: 20, padding: '3px 10px', fontWeight: 700, fontSize: 12 }}>
+                                ✓ Paid
+                              </span>
+                            ) : (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#fef3c7', color: '#d97706', borderRadius: 20, padding: '3px 10px', fontWeight: 700, fontSize: 12 }}>
+                                Unpaid
+                              </span>
+                            )}
                           </td>
                           <td>
                             <div className="action-buttons">
@@ -978,7 +1017,12 @@ const AdminDashboard = () => {
                         <td>{idx + 1}</td>
                         <td>
                           <div className="staff-cell">
-                            <img src={member.profile_image || `https://ui-avatars.com/api/?name=${member.full_name}&background=6c2bff&color=fff`} alt={member.full_name} className="staff-avatar-sm" />
+                            <div style={{ position: 'relative', display: 'inline-block' }}>
+                              <img src={member.profile_image || `https://ui-avatars.com/api/?name=${member.full_name}&background=6c2bff&color=fff`} alt={member.full_name} className="staff-avatar-sm" />
+                              {member.is_online && (
+                                <span style={{ position: 'absolute', bottom: 0, right: 0, width: 10, height: 10, background: '#27ae60', borderRadius: '50%', border: '2px solid #fff' }} title="Online" />
+                              )}
+                            </div>
                             <div>
                               <div className="staff-name">{member.full_name}</div>
                               <div className="staff-id-small">{member.employee_id}</div>
@@ -998,9 +1042,14 @@ const AdminDashboard = () => {
                         <td className="experience">{member.experience_years || 0} years</td>
                         <td className="rating">⭐ {member.rating || '4.5'}</td>
                         <td>
-                          <span className={`status-indicator ${member.is_active ? 'active' : 'inactive'}`}>
-                            {member.is_active ? '🟢 Active' : '🔴 Inactive'}
-                          </span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <span className={`status-indicator ${member.is_active ? 'active' : 'inactive'}`}>
+                              {member.is_active ? '🟢 Active' : '🔴 Inactive'}
+                            </span>
+                            {member.is_online && (
+                              <span style={{ fontSize: 11, color: '#27ae60', fontWeight: 600 }}>● Online</span>
+                            )}
+                          </div>
                         </td>
                         <td>
                           <div className="action-buttons-compact">
@@ -1090,7 +1139,7 @@ const AdminDashboard = () => {
                     <th>Status</th>
                     <th>Check In</th>
                     <th>Check Out</th>
-                    <th>Notes</th>
+                    <th>Online Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1099,24 +1148,48 @@ const AdminDashboard = () => {
                       <td colSpan="6" className="empty-row">No attendance records found</td>
                     </tr>
                   ) : (
-                    attendance.map((record) => (
-                      <tr key={record.id}>
-                        <td>{record.date}</td>
-                        <td className="user-cell">
-                          <div className="user-info">
-                            <div className="user-name">{record.staff?.full_name || 'Removed Staff'}</div>
-                          </div>
-                        </td>
-                        <td>
-                          <span className={`status-badge status-${record.status.toLowerCase()}`}>
-                            {record.status}
-                          </span>
-                        </td>
-                        <td>{record.check_in || '--:--'}</td>
-                        <td>{record.check_out || '--:--'}</td>
-                        <td>{record.notes || '-'}</td>
-                      </tr>
-                    ))
+                    attendance.map((record) => {
+                      const staffMemberData = staff.find(s => s.id === record.staff_id);
+                      const isOnline = staffMemberData?.is_online || (record.check_in && !record.check_out);
+                      return (
+                        <tr key={record.id}>
+                          <td>{record.date}</td>
+                          <td className="user-cell">
+                            <div className="user-info">
+                              <div className="user-name">{record.staff?.full_name || 'Removed Staff'}</div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className={`status-badge status-${record.status.toLowerCase()}`}>
+                              {record.status}
+                            </span>
+                          </td>
+                          <td>{record.check_in || '--:--'}</td>
+                          <td>{record.check_out || '--:--'}</td>
+                          <td>
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              fontWeight: 600,
+                              fontSize: 13,
+                              color: isOnline ? '#16a34a' : '#6b7280'
+                            }}>
+                              <span style={{
+                                width: 10,
+                                height: 10,
+                                borderRadius: '50%',
+                                background: isOnline ? '#22c55e' : '#9ca3af',
+                                display: 'inline-block',
+                                boxShadow: isOnline ? '0 0 0 3px #bbf7d0' : 'none',
+                                flexShrink: 0
+                              }} />
+                              {isOnline ? 'Online' : 'Offline'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -1176,6 +1249,53 @@ const AdminDashboard = () => {
             </div>
           </section>
         )}
+        {/* Admin Notifications Tab */}
+        {activeTab === 'notifications' && (
+          <section className="content-section">
+            <div className="section-header">
+              <h2>Notifications</h2>
+              <button className="refresh-btn" onClick={fetchAdminNotifs}>🔄 Refresh</button>
+            </div>
+            {adminNotifs.length === 0 ? (
+              <div className="empty-state">
+                <span className="empty-icon">🔔</span>
+                <p>No notifications yet</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {adminNotifs.map(n => (
+                  <div
+                    key={n.id}
+                    onClick={() => !n.is_read && markAdminNotifRead(n.id)}
+                    style={{
+                      padding: '14px 18px',
+                      borderRadius: 10,
+                      background: n.is_read ? '#f9fafb' : '#eff6ff',
+                      border: n.is_read ? '1px solid #e5e7eb' : '1px solid #bfdbfe',
+                      cursor: n.is_read ? 'default' : 'pointer',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: 12
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: '#1e293b', marginBottom: 4 }}>
+                        {!n.is_read && <span style={{ display: 'inline-block', width: 8, height: 8, background: '#3b82f6', borderRadius: '50%', marginRight: 8 }} />}
+                        {n.title}
+                      </div>
+                      <div style={{ fontSize: 13, color: '#475569' }}>{n.message}</div>
+                    </div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                      {new Date(n.created_at).toLocaleString('en-PK', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
         {/* Change Requests Tab */}
         {activeTab === 'requests' && (
           <section className="content-section">

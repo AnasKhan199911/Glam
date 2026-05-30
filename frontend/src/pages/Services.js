@@ -23,10 +23,10 @@ const Services = () => {
   useEffect(() => {
     fetchServices();
     
-    // Poll every 5 seconds for real-time service updates (e.g., admin adding/editing)
+    // Poll every 30 seconds for service updates
     const intervalId = setInterval(() => {
-      fetchServices(true); // pass true to indicate silent background fetch
-    }, 5000);
+      fetchServices(true);
+    }, 30000);
     
     return () => clearInterval(intervalId);
   }, []);
@@ -51,8 +51,8 @@ const Services = () => {
             description: service.description,
             image: service.image || service.image_url || 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=400&fit=crop',
             is_active: isActive,
-            rating: 4.8,
-            reviews: Math.floor(Math.random() * 200) + 20,
+            rating: service.average_rating,
+            reviews: service.review_count || 0,
           };
         });
         
@@ -299,11 +299,18 @@ const Services = () => {
               <div className="service-content">
                 <div className="service-header">
                   <h3 className="service-name">{service.name}</h3>
-                  <div className="service-rating">
-                    <span className="rating-star">★</span>
-                    <span className="rating-value">{service.rating}</span>
-                    <span className="rating-count">({service.reviews})</span>
-                  </div>
+                  {service.rating ? (
+                    <div className="service-rating">
+                      <span className="rating-star">★</span>
+                      <span className="rating-value">{service.rating}</span>
+                      <span className="rating-count">({service.reviews})</span>
+                    </div>
+                  ) : (
+                    <div className="service-rating no-rating">
+                      <span className="rating-star">★</span>
+                      <span className="rating-value">New</span>
+                    </div>
+                  )}
                 </div>
 
                 <p className="service-description">{service.description}</p>
@@ -362,11 +369,18 @@ const Services = () => {
             <div className="modal-content-section">
               <div className="modal-header">
                 <h2>{selectedService.name}</h2>
+                {selectedService.rating ? (
                 <div className="modal-rating">
-                  <span className="star">★</span> 
+                  <span className="star">★</span>
                   <span>{selectedService.rating}</span>
                   <span className="reviews">({selectedService.reviews} reviews)</span>
                 </div>
+              ) : (
+                <div className="modal-rating">
+                  <span className="star">★</span>
+                  <span>New Service</span>
+                </div>
+              )}
               </div>
 
               <p className="modal-description">{selectedService.description}</p>

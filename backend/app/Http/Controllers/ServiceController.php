@@ -9,16 +9,20 @@ class ServiceController extends Controller
 {
     public function getServices()
     {
-        $services = Service::all()->map(function($service) {
-            return array_merge($service->toArray(), [
-                'service_name' => $service->name,  // Alias for compatibility
-                'image_url' => $service->image,     // Alias for compatibility
-            ]);
-        });
-        return response()->json([
-            'success' => true,
-            'services' => $services
-        ]);
+        $services = Service::withAvg('reviews', 'rating')
+            ->withCount('reviews')
+            ->get()
+            ->map(function($service) {
+                return array_merge($service->toArray(), [
+                    'service_name'   => $service->name,
+                    'image_url'      => $service->image,
+                    'average_rating' => $service->reviews_avg_rating
+                        ? round((float) $service->reviews_avg_rating, 1)
+                        : null,
+                    'review_count'   => $service->reviews_count,
+                ]);
+            });
+        return response()->json(['success' => true, 'services' => $services]);
     }
 
     public function createService(Request $request)

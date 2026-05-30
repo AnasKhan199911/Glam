@@ -111,12 +111,27 @@ class PaymentController extends Controller
                 $booking->payment_method = 'card';
                 $booking->save();
 
-                // Create in-app notification for the user
+                $serviceName = $booking->service ? ($booking->service->service_name ?: $booking->service->name) : 'Salon Service';
+                $amountFmt  = number_format($booking->amount);
+                $clientName = $booking->customer_name ?: ($booking->user ? $booking->user->name : 'Client');
+
+                // In-app notification for the user
                 if ($booking->user_id) {
                     \App\Http\Controllers\NotificationController::createNotification(
                         $booking->user_id,
                         'Payment Successful!',
-                        "Your payment of Rs. " . number_format($booking->amount) . " for " . ($booking->service ? ($booking->service->service_name ?: $booking->service->name) : 'service') . " has been received successfully.",
+                        "Your payment of Rs. {$amountFmt} for {$serviceName} has been received. Booking ID: BK-{$booking->id}.",
+                        'appointment'
+                    );
+                }
+
+                // In-app notification for admin (find user with role admin)
+                $admin = \App\Models\User::where('role', 'admin')->first();
+                if ($admin) {
+                    \App\Http\Controllers\NotificationController::createNotification(
+                        $admin->id,
+                        '💳 Payment Received',
+                        "Rs. {$amountFmt} received from {$clientName} for {$serviceName} (BK-{$booking->id}).",
                         'appointment'
                     );
                 }
@@ -127,10 +142,9 @@ class PaymentController extends Controller
 
                 if ($email) {
                     try {
-                        $serviceName = $booking->service ? ($booking->service->service_name ?: $booking->service->name) : 'Salon Service';
                         $bookingDate = $booking->booking_date;
                         $bookingTime = $booking->booking_time;
-                        $amountPaid = number_format($booking->amount);
+                        $amountPaid = $amountFmt;
 
                         $emailContent = "Dear {$name},\n\n"
                             . "Thank you for your payment! Your booking has been successfully paid and confirmed.\n\n"

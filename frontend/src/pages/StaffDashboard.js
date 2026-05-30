@@ -105,7 +105,13 @@ const StaffDashboard = () => {
 
   const checkStatus = async () => {
     try {
-      const resp = await axios.post('/attendance/status', { id: staffMember.id });
+      const now = new Date();
+      const today = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, '0'),
+        String(now.getDate()).padStart(2, '0')
+      ].join('-');
+      const resp = await axios.post('/attendance/status', { id: staffMember.id, date: today });
       if (resp.data && resp.data.success) {
         setAttendanceRecord(resp.data.record);
       }
@@ -133,15 +139,23 @@ const StaffDashboard = () => {
   }
   */
 
+  const getLocalDate = (d) => {
+    return [
+      d.getFullYear(),
+      String(d.getMonth() + 1).padStart(2, '0'),
+      String(d.getDate()).padStart(2, '0')
+    ].join('-');
+  };
+
   const handleClockIn = async () => {
     try {
       setLoading(true);
       const now = new Date();
-      const localDate = now.toISOString().split('T')[0];
+      const localDate = getLocalDate(now);
       const localTime = now.toTimeString().split(' ')[0]; // HH:MM:SS
-      
-      const resp = await axios.post('/attendance/mark', { 
-        id: staffMember.id, 
+
+      const resp = await axios.post('/attendance/mark', {
+        id: staffMember.id,
         type: 'check_in',
         date: localDate,
         time: localTime
@@ -162,7 +176,7 @@ const StaffDashboard = () => {
     try {
       setLoading(true);
       const now = new Date();
-      const localDate = now.toISOString().split('T')[0];
+      const localDate = getLocalDate(now);
       const localTime = now.toTimeString().split(' ')[0]; // HH:MM:SS
 
       const resp = await axios.post('/attendance/mark', { 
@@ -230,6 +244,12 @@ const StaffDashboard = () => {
           <div className="welcome-text">
             <h1>Welcome back, {staffMember.full_name.split(' ')[0]}! <span className="staff-role-tag">({staffMember.role})</span></h1>
             <p>{formatDate(currentTime)} • {formatTime(currentTime)}</p>
+            {attendanceRecord?.check_in && !attendanceRecord?.check_out && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 4, fontSize: 13, color: '#27ae60', fontWeight: 600 }}>
+                <span style={{ width: 9, height: 9, background: '#27ae60', borderRadius: '50%', display: 'inline-block', boxShadow: '0 0 0 2px #d4f5e2' }} />
+                Staff is Online
+              </span>
+            )}
           </div>
         </div>
         <div className="header-actions">

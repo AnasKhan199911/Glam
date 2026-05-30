@@ -26,4 +26,9 @@ class Service extends Model
         'price' => 'decimal:2',
         'is_active' => 'boolean',
     ];
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
 }

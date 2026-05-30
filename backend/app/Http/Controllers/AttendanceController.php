@@ -29,8 +29,10 @@ class AttendanceController extends Controller
 
         if ($type === 'check_in') {
             $attendance->check_in = $time;
+            \App\Models\Staff::where('id', $id)->update(['is_online' => true]);
         } else {
             $attendance->check_out = $time;
+            \App\Models\Staff::where('id', $id)->update(['is_online' => false]);
         }
 
         $attendance->save();
@@ -41,9 +43,9 @@ class AttendanceController extends Controller
     public function getStaffTodayStatus(Request $request)
     {
         $id = $request->id;
-        $date = date('Y-m-d');
+        $date = $request->date ?? date('Y-m-d');
         $record = \App\Models\Attendance::where('staff_id', $id)->where('date', $date)->first();
-        
+
         return response()->json(['success' => true, 'record' => $record]);
     }
 }

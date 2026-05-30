@@ -14,8 +14,12 @@ return new class extends Migration
      */
     public function up()
     {
-        DB::statement('ALTER TABLE services CHANGE service_name name VARCHAR(255) NOT NULL');
-        DB::statement('ALTER TABLE services CHANGE image_url image VARCHAR(255) DEFAULT NULL');
+        if (Schema::hasColumn('services', 'service_name')) {
+            DB::statement('ALTER TABLE services CHANGE service_name name VARCHAR(255) NOT NULL');
+        }
+        if (Schema::hasColumn('services', 'image_url')) {
+            DB::statement('ALTER TABLE services CHANGE image_url image VARCHAR(255) DEFAULT NULL');
+        }
     }
 
     /**

@@ -18,9 +18,10 @@ class StaffController extends Controller
     {
         $data = $request->all();
         
-        // Auto-generate Employee ID
-        $count = \App\Models\Staff::count();
-        $data['employee_id'] = 'EMP' . str_pad($count + 1, 3, '0', STR_PAD_LEFT);
+        // Auto-generate Employee ID based on highest existing number, not count
+        $maxId = \App\Models\Staff::where('employee_id', 'like', 'EMP%')->max('employee_id');
+        $nextNum = $maxId ? ((int) substr($maxId, 3)) + 1 : 1;
+        $data['employee_id'] = 'EMP' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
         
         // Ensure email is unique
         if (\App\Models\Staff::where('email', $data['email'])->exists()) {
@@ -109,49 +110,14 @@ class StaffController extends Controller
             return response()->json(['success' => false, 'message' => 'Staff not found'], 404);
         }
 
-        // We'll filter based on service name or category matching specialization or role
-        $spec = strtolower($staff->specialization);
-        $role = strtolower($staff->role);
-        
-        // Broaden keywords: "Hair coloring"
-        $keywords = array_filter(array_unique(array_merge(
-            explode(' ', $spec),
-            explode(' ', $role)
-        )), function($k) { return strlen($k) > 2; });
-
-        // Broaden keywords with synonyms for better matching
-        $broadenedKeywords = $keywords;
-        foreach ($keywords as $k) {
-            if ($k === 'stylist' || $k === 'hair') {
-                $broadenedKeywords[] = 'hair';
-                $broadenedKeywords[] = 'styling';
-            }
-            if ($k === 'beautician' || $k === 'makeup' || $k === 'skincare') {
-                $broadenedKeywords[] = 'makeup';
-                $broadenedKeywords[] = 'skincare';
-                $broadenedKeywords[] = 'beautician';
-            }
-            if ($k === 'therapist' || $k === 'spa' || $k === 'massage') {
-                $broadenedKeywords[] = 'spa';
-                $broadenedKeywords[] = 'massage';
-                $broadenedKeywords[] = 'therapist';
-            }
-            if ($k === 'nails' || $k === 'manicure' || $k === 'pedicure' || $k === 'nail') {
-                $broadenedKeywords[] = 'nails';
-                $broadenedKeywords[] = 'manicure';
-                $broadenedKeywords[] = 'pedicure';
-            }
-        }
-        $broadenedKeywords = array_unique($broadenedKeywords);
+        // Match bookings and reviews by exact service name = staff role (case-insensitive)
+        // or by service category = staff role (fallback)
+        $role = $staff->role;
 
         $bookings = \App\Models\Booking::with(['user', 'service'])
-            ->whereHas('service', function($query) use ($broadenedKeywords) {
-                $query->where(function($q) use ($broadenedKeywords) {
-                    foreach ($broadenedKeywords as $keyword) {
-                        $q->orWhere('name', 'like', "%$keyword%")
-                          ->orWhere('category', 'like', "%$keyword%");
-                    }
-                });
+            ->whereHas('service', function($query) use ($role) {
+                $query->whereRaw('LOWER(name) = LOWER(?)', [$role])
+                      ->orWhereRaw('LOWER(category) = LOWER(?)', [$role]);
             })
             ->where('status', '!=', 'cancelled')
             ->orderBy('booking_date', 'asc')
@@ -159,15 +125,9 @@ class StaffController extends Controller
             ->get();
 
         // Calculate average rating from matching reviews
-        $avgRating = \App\Models\Review::whereHas('service', function($query) use ($keywords) {
-            $query->where(function($q) use ($keywords) {
-                foreach ($keywords as $keyword) {
-                    if ($keyword != 'stylist' && $keyword != 'staff' && $keyword != 'specialist') {
-                        $q->orWhere('name', 'like', "%$keyword%")
-                          ->orWhere('category', 'like', "%$keyword%");
-                    }
-                }
-            });
+        $avgRating = \App\Models\Review::whereHas('service', function($query) use ($role) {
+            $query->whereRaw('LOWER(name) = LOWER(?)', [$role])
+                  ->orWhereRaw('LOWER(category) = LOWER(?)', [$role]);
         })->avg('rating') ?: 0;
 
         // Calculate stats

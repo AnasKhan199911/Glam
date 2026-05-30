@@ -2,6 +2,17 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from '../api/axiosConfig';
 import './Profile.css';
 
+const StarDisplay = ({ rating, size = 'sm' }) => {
+  const stars = [1, 2, 3, 4, 5];
+  return (
+    <span className={`star-display star-display-${size}`}>
+      {stars.map(s => (
+        <span key={s} className={s <= Math.round(rating) ? 'star-filled' : 'star-empty'}>★</span>
+      ))}
+    </span>
+  );
+};
+
 const Profile = () => {
   const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null;
   const [bookings, setBookings] = useState([]);
@@ -18,20 +29,26 @@ const Profile = () => {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackForm, setFeedbackForm] = useState({ service_id: '', rating: 5, comment: '' });
   const isAdmin = localStorage.getItem('adminToken');
-  const [servicesList, setServicesList] = useState([]);
 
+  // New state for feedback feature
+  const [bookedServices, setBookedServices] = useState([]);
+  const [userReviews, setUserReviews] = useState([]);
+  const [allReviews, setAllReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     fetchBookings();
     fetchServices();
     fetchNotifications();
+    fetchUserReviews();
+    fetchAllReviews();
+    fetchBookedServices();
 
-    // Set interval for real-time updates
     const updateInterval = setInterval(() => {
       fetchNotifications();
-      fetchBookings(true); // silent update
-    }, 5000); // Poll every 5 seconds
+      fetchBookings(true);
+    }, 5000);
 
     return () => clearInterval(updateInterval);
   }, []);
@@ -56,39 +73,69 @@ const Profile = () => {
             fetchNotifications();
           } else {
             setStatusMessage({ text: resp.data.message || 'Payment verification failed.', type: 'error' });
-            paymentVerifiedRef.current = false; // Reset to allow retry if it wasn't successful
+            paymentVerifiedRef.current = false;
           }
         } catch (err) {
-          console.error('Payment confirmation error:', err);
           const errorMsg = err.response?.data?.message || 'Error confirming payment. Please contact support.';
           setStatusMessage({ text: errorMsg, type: 'error' });
-          paymentVerifiedRef.current = false; // Reset to allow retry on error
+          paymentVerifiedRef.current = false;
         }
       };
       verifyPayment();
     }
   }, []);
 
-
   const fetchServices = async () => {
     try {
       const resp = await axios.post('/services/get-all', {});
       if (resp.data && resp.data.success) {
         const servicesMap = {};
-        const servicesList = [];
         resp.data.services.forEach(s => {
           servicesMap[s.id] = s.name || 'Unknown Service';
-          servicesList.push({ id: s.id, name: s.name });
         });
         setServices(servicesMap);
-        setServicesList(servicesList);
       }
     } catch (err) {
       console.error('Error fetching services:', err);
     }
   };
 
+  const fetchAllReviews = async () => {
+    setReviewsLoading(true);
+    try {
+      const resp = await axios.post('/reviews/get-all');
+      if (resp.data && resp.data.success) {
+        setAllReviews(resp.data.reviews || []);
+      }
+    } catch (err) {
+      console.error('Error fetching all reviews', err);
+    }
+    setReviewsLoading(false);
+  };
 
+  const fetchUserReviews = async () => {
+    if (!user) return;
+    try {
+      const resp = await axios.post('/reviews/get-user', { user_id: user.id || user.userID });
+      if (resp.data && resp.data.success) {
+        setUserReviews(resp.data.reviews || []);
+      }
+    } catch (err) {
+      console.error('Error fetching user reviews:', err);
+    }
+  };
+
+  const fetchBookedServices = async () => {
+    if (!user) return;
+    try {
+      const resp = await axios.post('/reviews/get-booked-services', { user_id: user.id || user.userID });
+      if (resp.data && resp.data.success) {
+        setBookedServices(resp.data.services || []);
+      }
+    } catch (err) {
+      console.error('Error fetching booked services:', err);
+    }
+  };
 
   const formatTime12h = (time24) => {
     if (!time24) return '';
@@ -101,9 +148,6 @@ const Profile = () => {
     const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
     return `${displayHour}:${m} ${meridiem}`;
   };
-
-  // Generate time slots from 9 AM to 10 PM (every 30 minutes in 24h format)
-
 
   const fetchBookings = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -138,7 +182,6 @@ const Profile = () => {
     }
   };
 
-
   const generateTimeSlots = () => {
     const slots = [];
     for (let hour = 9; hour <= 21; hour++) {
@@ -150,16 +193,23 @@ const Profile = () => {
     return slots;
   };
 
+  // Check if user already reviewed a service
+  const hasReviewed = (serviceId) => {
+    return userReviews.some(r => String(r.service_id) === String(serviceId));
+  };
+
   const handleFeedbackSubmit = async (e) => {
     e.preventDefault();
-    const payload = {
-      ...feedbackForm,
-      user_id: user.id || user.userID
-    };
+    const payload = { ...feedbackForm, user_id: user.id || user.userID };
 
     if (!payload.service_id) {
-        setStatusMessage({ text: 'Please select a service from the list.', type: 'error' });
-        return;
+      setStatusMessage({ text: 'Please select a service.', type: 'error' });
+      return;
+    }
+
+    if (hasReviewed(payload.service_id)) {
+      setStatusMessage({ text: 'You have already submitted feedback for this service.', type: 'error' });
+      return;
     }
 
     try {
@@ -168,12 +218,15 @@ const Profile = () => {
         setStatusMessage({ text: 'Review submitted! Thank you.', type: 'success' });
         setShowFeedbackModal(false);
         setFeedbackForm({ service_id: '', rating: 5, comment: '' });
+        fetchUserReviews();
+        fetchAllReviews();
         setTimeout(() => setStatusMessage({ text: '', type: '' }), 3000);
+      } else if (resp.data.already_reviewed) {
+        setStatusMessage({ text: 'You have already submitted feedback for this service.', type: 'error' });
       } else {
         setStatusMessage({ text: 'Error: ' + (resp.data.message || 'Submission failed'), type: 'error' });
       }
     } catch (err) {
-      console.error('Feedback error details:', err.response?.data || err.message);
       setStatusMessage({ text: 'Error: ' + (err.response?.data?.message || 'Server error'), type: 'error' });
     }
   };
@@ -184,7 +237,7 @@ const Profile = () => {
       const resp = await axios.post('/bookings/cancel', { id: bookingID });
       if (resp.data && resp.data.success) {
         setBookings((prev) => prev.map(b => b.id === bookingID ? { ...b, status: 'cancelled' } : b));
-        setStatusMessage({ text: `Booking cancelled successfully`, type: 'success' });
+        setStatusMessage({ text: 'Booking cancelled successfully', type: 'success' });
         setTimeout(() => setStatusMessage({ text: '', type: '' }), 3000);
       }
     } catch (err) {
@@ -211,26 +264,23 @@ const Profile = () => {
       setStatusMessage({ text: 'Date and time are required', type: 'error' });
       return;
     }
-
     try {
-      // For Admins, update directly. For Users, send a request.
       const endpoint = isAdmin ? '/bookings/update' : '/bookings/request-reschedule';
-      const resp = await axios.post(endpoint, { 
-        id: bookingID, 
-        date: editDate, 
-        time: editTime, 
-        booking_date: editDate, // fallback for direct update
-        booking_time: editTime, 
-        notes: editNotes 
+      const resp = await axios.post(endpoint, {
+        id: bookingID,
+        date: editDate,
+        time: editTime,
+        booking_date: editDate,
+        booking_time: editTime,
+        notes: editNotes,
       });
-
       if (resp.data && resp.data.success) {
         if (isAdmin) {
           setBookings((prev) => prev.map(b => b.id === bookingID ? { ...b, booking_date: editDate, booking_time: editTime, notes: editNotes } : b));
-          setStatusMessage({ text: `Booking updated directly`, type: 'success' });
+          setStatusMessage({ text: 'Booking updated directly', type: 'success' });
         } else {
           setBookings((prev) => prev.map(b => b.id === bookingID ? { ...b, reschedule_status: 'pending' } : b));
-          setStatusMessage({ text: `Reschedule request sent to admin!`, type: 'success' });
+          setStatusMessage({ text: 'Reschedule request sent to admin!', type: 'success' });
         }
         setTimeout(() => setStatusMessage({ text: '', type: '' }), 3000);
         cancelEdit();
@@ -250,13 +300,9 @@ const Profile = () => {
         setStatusMessage({ text: resp.data.message || 'Payment initiation failed', type: 'error' });
       }
     } catch (err) {
-      console.error('Payment error:', err);
       setStatusMessage({ text: err.response?.data?.message || 'Error connecting to Stripe', type: 'error' });
     }
   };
-
-
-
 
   if (!user) {
     return (
@@ -281,7 +327,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* User Tabs - Hidden for Admin */}
+        {/* Tabs */}
         {!isAdmin && (
           <div className="profile-tabs">
             <button className={`tab-btn ${activeTab === 'bookings' ? 'active' : ''}`} onClick={() => setActiveTab('bookings')}>
@@ -290,13 +336,16 @@ const Profile = () => {
             <button className={`tab-btn ${activeTab === 'notifications' ? 'active' : ''}`} onClick={() => setActiveTab('notifications')}>
               🔔 Notifications {notifications.filter(n => !n.is_read).length > 0 && <span className="notif-count">{notifications.filter(n => !n.is_read).length}</span>}
             </button>
-            <button className={`tab-btn feedback-btn`} onClick={() => setShowFeedbackModal(true)}>
-              ⭐ Give Feedback
+            <button className={`tab-btn ${activeTab === 'reviews' ? 'active' : ''}`} onClick={() => setActiveTab('reviews')}>
+              ⭐ Reviews {allReviews.length > 0 && <span className="notif-count">{allReviews.length}</span>}
+            </button>
+            <button className="tab-btn feedback-btn" onClick={() => setShowFeedbackModal(true)}>
+              ✍️ Give Feedback
             </button>
           </div>
         )}
 
-        {/* Bookings Display - Hidden for Admin */}
+        {/* Bookings Tab */}
         {!isAdmin && activeTab === 'bookings' && (
           <div className="bookings-section">
             <h3 className="section-title">My Bookings</h3>
@@ -323,35 +372,27 @@ const Profile = () => {
                     </div>
                     {editingId === booking.id ? (
                       <div className="edit-form-mobile">
-                         <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} min={new Date().toISOString().split('T')[0]} />
-                         <select value={editTime} onChange={e => setEditTime(e.target.value)}>
-                            {generateTimeSlots().map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                         </select>
-                         <div className="edit-actions">
-                            <button className="save-btn" onClick={() => saveEdit(booking.id)}>Request Change</button>
-                            <button className="cancel-btn" onClick={cancelEdit}>Cancel</button>
-                         </div>
+                        <input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} min={new Date().toISOString().split('T')[0]} />
+                        <select value={editTime} onChange={e => setEditTime(e.target.value)}>
+                          {generateTimeSlots().map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                        </select>
+                        <div className="edit-actions">
+                          <button className="save-btn" onClick={() => saveEdit(booking.id)}>Request Change</button>
+                          <button className="cancel-btn" onClick={cancelEdit}>Cancel</button>
+                        </div>
                       </div>
                     ) : (
                       <div className="booking-actions">
                         {booking.status === 'confirmed' && booking.payment_status !== 'paid' && (
-                          <button className="pay-now-btn" onClick={() => handlePayment(booking.id)} title="Pay via Stripe">
-                            💳 Pay Now
-                          </button>
+                          <button className="pay-now-btn" onClick={() => handlePayment(booking.id)}>💳 Pay Now</button>
                         )}
                         {booking.status !== 'cancelled' && booking.status !== 'completed' && (
                           <>
-                            <button className="edit-btn" onClick={() => startEdit(booking)} title="Request Reschedule">
-                              ✏️ Request Change
-                            </button>
-                            <button className="cancel-booking-btn" onClick={() => handleCancelBooking(booking.id)} title="Cancel Booking">
-                              ❌ Cancel
-                            </button>
+                            <button className="edit-btn" onClick={() => startEdit(booking)}>✏️ Request Change</button>
+                            <button className="cancel-booking-btn" onClick={() => handleCancelBooking(booking.id)}>❌ Cancel</button>
                           </>
                         )}
-                        <button className="del-btn-minimal" onClick={() => handleCancelBooking(booking.id)} title="Remove">
-                          🗑️
-                        </button>
+                        <button className="del-btn-minimal" onClick={() => handleCancelBooking(booking.id)}>🗑️</button>
                       </div>
                     )}
                   </div>
@@ -361,7 +402,7 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Notifications Display - Hidden for Admin */}
+        {/* Notifications Tab */}
         {!isAdmin && activeTab === 'notifications' && (
           <div className="notifications-section">
             <h3 className="section-title">Your Notifications</h3>
@@ -383,49 +424,127 @@ const Profile = () => {
           </div>
         )}
 
+        {/* Reviews Tab */}
+        {!isAdmin && activeTab === 'reviews' && (
+          <div className="reviews-section">
+            <h3 className="section-title">Customer Reviews</h3>
+            {reviewsLoading ? (
+              <div className="loading-spinner">Loading...</div>
+            ) : allReviews.length === 0 ? (
+              <div className="empty-state">
+                <p>No reviews yet. Be the first to leave one!</p>
+                <button className="feedback-btn-inline" onClick={() => setShowFeedbackModal(true)}>✍️ Give Your First Review</button>
+              </div>
+            ) : (
+              <div className="user-reviews-list">
+                {allReviews.map((review) => {
+                  const reviewerName = review.user?.name || 'Anonymous';
+                  const initial = reviewerName.charAt(0).toUpperCase();
+                  const isOwn = user && (review.user_id === (user.id || user.userID));
+                  return (
+                    <div key={review.id} className="user-review-card">
+                      <div className="review-card-header">
+                        <div className="review-service-info">
+                          <div className="review-user-avatar" title={reviewerName}>{initial}</div>
+                          <div>
+                            <h4 className="review-service-name">
+                              {reviewerName}
+                              {isOwn && <span className="review-own-badge"> (You)</span>}
+                            </h4>
+                            <span className="review-service-category">
+                              {review.service?.name || 'Service'}
+                              {review.service?.category ? ` · ${review.service.category}` : ''}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="review-rating-badge">
+                          <StarDisplay rating={review.rating} size="sm" />
+                          <span className="review-rating-number">{review.rating}/5</span>
+                        </div>
+                      </div>
+                      {review.comment && (
+                        <p className="review-comment">"{review.comment}"</p>
+                      )}
+                      <div className="review-card-footer">
+                        <span className="review-date">{new Date(review.created_at).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                        <span className="review-verified-badge">✓ Verified</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Feedback Modal */}
         {showFeedbackModal && (
           <div className="feedback-modal-overlay" onClick={() => setShowFeedbackModal(false)}>
             <div className="feedback-modal-content feedback-glass-card" onClick={e => e.stopPropagation()}>
               <button className="close-feedback-btn" onClick={() => setShowFeedbackModal(false)}>×</button>
               <h3>Give Your Feedback</h3>
-              <form onSubmit={handleFeedbackSubmit}>
-                <div className="form-group">
-                  <label>Select Service:</label>
-                  <select 
-                    required 
-                    value={feedbackForm.service_id} 
-                    onChange={e => setFeedbackForm({...feedbackForm, service_id: e.target.value})}
-                  >
-                    <option value="">-- Choose --</option>
-                    {servicesList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
+              {bookedServices.length === 0 ? (
+                <div className="no-booked-services">
+                  <p>You need to book a service first before submitting feedback.</p>
                 </div>
-                <div className="form-group">
-                  <label>Rating:</label>
-                  <div className="rating-input">
-                    {[1, 2, 3, 4, 5].map(num => (
-                      <span 
-                        key={num} 
-                        className={`feedback-star ${feedbackForm.rating >= num ? 'filled' : ''}`}
-                        onClick={() => setFeedbackForm({...feedbackForm, rating: num})}
-                      >⭐</span>
-                    ))}
+              ) : (
+                <form onSubmit={handleFeedbackSubmit}>
+                  <div className="form-group">
+                    <label>Select Service:</label>
+                    <select
+                      required
+                      value={feedbackForm.service_id}
+                      onChange={e => setFeedbackForm({ ...feedbackForm, service_id: e.target.value })}
+                    >
+                      <option value="">-- Choose --</option>
+                      {bookedServices.map(s => (
+                        <option key={s.id} value={s.id} disabled={hasReviewed(s.id)}>
+                          {s.name}{hasReviewed(s.id) ? ' ✓ Feedback Given' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    {feedbackForm.service_id && hasReviewed(feedbackForm.service_id) && (
+                      <p className="already-reviewed-msg">✓ You have already submitted feedback for this service.</p>
+                    )}
                   </div>
-                </div>
-                <div className="form-group">
-                  <label>Comment:</label>
-                  <textarea 
-                    value={feedbackForm.comment} 
-                    onChange={e => setFeedbackForm({...feedbackForm, comment: e.target.value})}
-                    placeholder="Tell us about your experience..."
-                  ></textarea>
-                </div>
-                <div className="modal-actions">
-                  <button type="button" className="btn-cancel" onClick={() => setShowFeedbackModal(false)}>Cancel</button>
-                  <button type="submit" className="submit-btn feedback-submit-btn">Submit Review</button>
-                </div>
-              </form>
+
+                  {feedbackForm.service_id && !hasReviewed(feedbackForm.service_id) && (
+                    <>
+                      <div className="form-group">
+                        <label>Rating:</label>
+                        <div className="rating-input">
+                          {[1, 2, 3, 4, 5].map(num => (
+                            <span
+                              key={num}
+                              className={`feedback-star ${feedbackForm.rating >= num ? 'filled' : ''}`}
+                              onClick={() => setFeedbackForm({ ...feedbackForm, rating: num })}
+                            >⭐</span>
+                          ))}
+                          <span className="rating-label-text">{feedbackForm.rating}/5</span>
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>Comment:</label>
+                        <textarea
+                          value={feedbackForm.comment}
+                          onChange={e => setFeedbackForm({ ...feedbackForm, comment: e.target.value })}
+                          placeholder="Tell us about your experience..."
+                        ></textarea>
+                      </div>
+                      <div className="modal-actions">
+                        <button type="button" className="btn-cancel" onClick={() => setShowFeedbackModal(false)}>Cancel</button>
+                        <button type="submit" className="submit-btn feedback-submit-btn">Submit Review</button>
+                      </div>
+                    </>
+                  )}
+
+                  {feedbackForm.service_id && hasReviewed(feedbackForm.service_id) && (
+                    <div className="modal-actions">
+                      <button type="button" className="btn-cancel" onClick={() => setShowFeedbackModal(false)}>Close</button>
+                    </div>
+                  )}
+                </form>
+              )}
             </div>
           </div>
         )}

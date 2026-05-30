@@ -82,6 +82,8 @@ Route::prefix('reviews')->group(function () {
     Route::post('/submit', [ReviewController::class, 'submitReview']);
     Route::get('/service/{service_id}', [ReviewController::class, 'getServiceReviews']);
     Route::post('/get-all', [ReviewController::class, 'getAllReviews']);
+    Route::post('/get-user', [ReviewController::class, 'getUserReviews']);
+    Route::post('/get-booked-services', [ReviewController::class, 'getUserBookedServices']);
     Route::post('/get-staff', [ReviewController::class, 'getStaffReviews']);
     Route::post('/delete', [ReviewController::class, 'deleteReview']);
 });

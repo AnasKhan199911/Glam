@@ -25,6 +25,7 @@ class Staff extends Model
         'rating',
         'total_services',
         'is_active',
+        'is_online',
         'password'
     ];
 
@@ -34,6 +35,7 @@ class Staff extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_online' => 'boolean',
         'experience_years' => 'integer',
         'salary' => 'decimal:2',
         'rating' => 'decimal:1',
