@@ -107,6 +107,7 @@ class PaymentController extends Controller
             if ($session['payment_status'] === 'paid') {
                 // Update booking status
                 $booking->payment_status = 'paid';
+                $booking->status = 'confirmed';
                 $booking->payment_id = $sessionId;
                 $booking->payment_method = 'card';
                 $booking->save();

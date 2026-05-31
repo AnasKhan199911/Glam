@@ -62,38 +62,40 @@ const Profile = () => {
 
     if (paymentSuccess === 'true' && bookingId && sessionId && !paymentVerifiedRef.current) {
       paymentVerifiedRef.current = true;
-      const verifyPayment = async () => {
+
+      const verifyWithRetry = async (attempt = 0) => {
         try {
-          setStatusMessage({ text: 'Confirming payment with Stripe...', type: 'info' });
-          const resp = await axios.post('/payment/confirm-payment', { booking_id: bookingId, session_id: sessionId });
+          setStatusMessage({ text: `Confirming payment with Stripe${attempt > 0 ? ` (attempt ${attempt + 1})` : ''}...`, type: 'info' });
+          const resp = await axios.post('/payment/confirm-payment', { booking_id: bookingId, session_id: sessionId }, { timeout: 30000 });
           if (resp.data && resp.data.success) {
-            setStatusMessage({ text: 'Payment confirmed! Confirmation email sent.', type: 'success' });
-            // Auto-clear success message after 3 seconds
-            setTimeout(() => {
-              setStatusMessage({ text: '', type: '' });
-            }, 3000);
+            setStatusMessage({ text: '✅ Payment confirmed! Booking is now CONFIRMED.', type: 'success' });
             window.history.replaceState({}, document.title, window.location.pathname);
             fetchBookings();
             fetchNotifications();
+            setTimeout(() => setStatusMessage({ text: '', type: '' }), 4000);
+          } else if (resp.data?.message === 'Payment already confirmed') {
+            setStatusMessage({ text: '✅ Payment already confirmed!', type: 'success' });
+            window.history.replaceState({}, document.title, window.location.pathname);
+            fetchBookings();
+            setTimeout(() => setStatusMessage({ text: '', type: '' }), 3000);
+          } else if (attempt < 4) {
+            // Stripe session might not be finalized yet — retry after 2s
+            setTimeout(() => verifyWithRetry(attempt + 1), 2000);
           } else {
-            setStatusMessage({ text: resp.data.message || 'Payment verification failed.', type: 'error' });
-            // Auto-clear error message after 5 seconds
-            setTimeout(() => {
-              setStatusMessage({ text: '', type: '' });
-            }, 5000);
+            setStatusMessage({ text: 'Payment verification failed. Please refresh the page.', type: 'error' });
             paymentVerifiedRef.current = false;
           }
         } catch (err) {
-          const errorMsg = err.response?.data?.message || 'Error confirming payment. Please contact support.';
-          setStatusMessage({ text: errorMsg, type: 'error' });
-          // Auto-clear error message after 5 seconds
-          setTimeout(() => {
-            setStatusMessage({ text: '', type: '' });
-          }, 5000);
-          paymentVerifiedRef.current = false;
+          if (attempt < 4) {
+            setTimeout(() => verifyWithRetry(attempt + 1), 2000);
+          } else {
+            setStatusMessage({ text: 'Could not confirm payment. Please refresh or contact support.', type: 'error' });
+            paymentVerifiedRef.current = false;
+          }
         }
       };
-      verifyPayment();
+
+      verifyWithRetry();
     }
   }, []);
 
@@ -395,7 +397,7 @@ const Profile = () => {
                       </div>
                     ) : (
                       <div className="booking-actions">
-                        {booking.status === 'confirmed' && booking.payment_status !== 'paid' && (
+                        {booking.status !== 'cancelled' && booking.status !== 'completed' && booking.payment_status !== 'paid' && (
                           <button className="pay-now-btn" onClick={() => handlePayment(booking.id)}>💳 Pay Now</button>
                         )}
                         {booking.status !== 'cancelled' && booking.status !== 'completed' && (

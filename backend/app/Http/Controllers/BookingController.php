@@ -332,6 +332,19 @@ class BookingController extends Controller
         return response()->json(['success' => true, 'message' => 'Reschedule rejected']);
     }
 
+    public function deleteBooking(Request $request)
+    {
+        $booking = Booking::find($request->id);
+
+        if (!$booking) {
+            return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
+        }
+
+        $booking->delete();
+
+        return response()->json(['success' => true, 'message' => 'Booking deleted successfully']);
+    }
+
     // Helper to avoid code duplication
     private function getRelevantStaff($service) {
         $keywords = array_filter(array_unique(explode(' ', strtolower($service->name . ' ' . $service->category))), function($k) { return strlen($k) > 2; });
