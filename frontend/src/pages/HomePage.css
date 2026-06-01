@@ -1,9 +1,9 @@
-/* ===== HOMEPAGE - PROFESSIONAL STYLING ===== */
+﻿/* ===== HOMEPAGE - PROFESSIONAL STYLING ===== */
 
 .home-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #fff 0%, #f8f5ff 50%, #fff5f8 100%);
-  color: #1a0838;
+  background: linear-gradient(180deg, #fff 0%, #F0F4F8 50%, #FAFAFA 100%);
+  color: #1A1A2E;
   overflow-x: hidden;
 }
 
@@ -25,7 +25,7 @@
   font-size: clamp(2rem, 5vw, 3rem);
   font-weight: 800;
   margin-bottom: 20px;
-  background: linear-gradient(135deg, #6c2bff, #9c47ff, #ff5f8e);
+  background: linear-gradient(135deg, #1E3A5F, #2C5282, #E8A598);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -33,7 +33,7 @@
 
 /* ===== SERVICES PREVIEW SECTION ===== */
 .services-preview {
-  background: linear-gradient(135deg, #6c2bff 0%, #9c47ff 50%, #ff5f8e 100%);
+  background: linear-gradient(135deg, #1E3A5F 0%, #2C5282 50%, #E8A598 100%);
   margin: 0;
   padding: 100px 30px;
   color: #fff;
@@ -134,7 +134,7 @@
 .why-us {
   background: #fff;
   padding: 100px 30px;
-  color: #1a0838;
+  color: #1A1A2E;
 }
 
 .why-us * {
@@ -165,8 +165,8 @@
 
 .feature-card.glass-card:hover {
   transform: translateY(-10px);
-  border-color: rgba(108, 43, 255, 0.3);
-  box-shadow: 0 20px 50px rgba(108, 43, 255, 0.1);
+  border-color: rgba(30, 58, 95, 0.3);
+  box-shadow: 0 20px 50px rgba(30, 58, 95, 0.1);
 }
 
 .feature-icon {
@@ -183,9 +183,9 @@
 .feature-card h3 {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #1a0838 !important;
+  color: #1A1A2E !important;
   margin-bottom: 12px;
-  -webkit-text-fill-color: #1a0838;
+  -webkit-text-fill-color: #1A1A2E;
 }
 
 .feature-card p {
@@ -197,7 +197,7 @@
 
 /* ===== CTA SECTION ===== */
 .cta-section {
-  background: linear-gradient(135deg, #1a0838 0%, #2d1654 100%);
+  background: linear-gradient(135deg, #1A1A2E 0%, #2d1654 100%);
   padding: 100px 30px;
   margin: 0;
   position: relative;
@@ -268,15 +268,15 @@
 
 .cta-button,
 .primary-button {
-  background: linear-gradient(135deg, #6c2bff 0%, #9c47ff 100%);
+  background: linear-gradient(135deg, #1E3A5F 0%, #2C5282 100%);
   color: #fff;
-  box-shadow: 0 8px 30px rgba(108, 43, 255, 0.4);
+  box-shadow: 0 8px 30px rgba(30, 58, 95, 0.4);
 }
 
 .cta-button:hover,
 .primary-button:hover {
   transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 12px 40px rgba(108, 43, 255, 0.5);
+  box-shadow: 0 12px 40px rgba(30, 58, 95, 0.5);
 }
 
 .secondary-button {
@@ -296,8 +296,8 @@
 /* View All Services button in services section */
 .services-preview .cta-button {
   background: #fff;
-  color: #6c2bff !important;
-  -webkit-text-fill-color: #6c2bff !important;
+  color: #1E3A5F !important;
+  -webkit-text-fill-color: #1E3A5F !important;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
 }
 
@@ -397,3 +397,4 @@
     font-size: 1rem;
   }
 }
+

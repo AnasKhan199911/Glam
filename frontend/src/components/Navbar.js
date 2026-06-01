@@ -9,11 +9,11 @@ import './Navbar.css';
 const Navbar = () => {
   // Track if user is logged in by checking localStorage for token
   const [isLoggedIn, setIsLoggedIn] = useState(
-    !!localStorage.getItem('token') || 
-    !!localStorage.getItem('adminToken') || 
+    !!localStorage.getItem('token') ||
+    !!localStorage.getItem('adminToken') ||
     !!localStorage.getItem('staffToken')
   );
-  
+
   // Get user data from localStorage (Check for regular user/admin first, then staff)
   const [user, setUser] = useState(() => {
     const userData = localStorage.getItem('user');
@@ -42,7 +42,7 @@ const Navbar = () => {
   useEffect(() => {
     const hasToken = !!localStorage.getItem('token') || !!localStorage.getItem('adminToken') || !!localStorage.getItem('staffToken');
     setIsLoggedIn(hasToken);
-    
+
     const userData = localStorage.getItem('user');
     const staffData = localStorage.getItem('staffUser');
     

@@ -1,5 +1,4 @@
 /* ===== GALLERY PAGE STYLING ===== */
-/* This file styles the gallery page */
 
 .gallery-page {
   width: 100%;
@@ -10,12 +9,12 @@
 
 /* ===== GALLERY HEADER ===== */
 .gallery-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1E3A5F, #2C5282);
   color: white;
   text-align: center;
   padding: 60px 20px;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+  box-shadow: 0 10px 30px rgba(30,58,95,0.2);
 }
 
 .gallery-header h1 {
@@ -36,7 +35,8 @@
   justify-content: center;
   gap: 15px;
   padding: 30px 20px;
-  background: rgba(255,255,255,0.04);
+  background: #F0F4F8;
+  border: 1px solid #D6E0EA;
   border-radius: 14px;
   max-width: 1200px;
   margin: 1rem auto;
@@ -45,9 +45,9 @@
 
 .filter-btn {
   padding: 12px 25px;
-  border: 1px solid #667eea;
+  border: 1px solid #1E3A5F;
   background: transparent;
-  color: #667eea;
+  color: #1E3A5F;
   border-radius: 25px;
   cursor: pointer;
   font-weight: 600;
@@ -56,14 +56,15 @@
 }
 
 .filter-btn:hover {
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(30, 58, 95, 0.08);
   transform: translateY(-2px);
 }
 
 .filter-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1E3A5F, #2C5282);
   color: white;
   border-color: transparent;
+  box-shadow: 0 4px 14px rgba(30,58,95,0.3);
 }
 
 /* ===== GALLERY CONTAINER ===== */
@@ -74,7 +75,6 @@
 }
 
 .gallery-grid {
-  /* masonry-like layout using CSS columns */
   column-count: 3;
   column-gap: 20px;
   width: 100%;
@@ -82,22 +82,22 @@
 
 /* ===== GALLERY ITEM ===== */
 .gallery-item {
-  display: inline-block; /* required for CSS columns masonry effect */
+  display: inline-block;
   width: 100%;
   margin: 0 0 20px;
-  background: rgba(255,255,255,0.04);
+  background: #FFFFFF;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(31,38,135,0.06);
+  box-shadow: 0 4px 16px rgba(30,58,95,0.08);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   cursor: pointer;
-  border: 1px solid rgba(255,255,255,0.04);
+  border: 1px solid #D6E0EA;
   break-inside: avoid;
 }
 
 .gallery-item:hover {
   transform: translateY(-6px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 12px 40px rgba(30,58,95,0.18);
 }
 
 .gallery-image {
@@ -120,7 +120,7 @@
 
 .gallery-category {
   font-size: 12px;
-  color: #667eea;
+  color: #1E3A5F;
   font-weight: bold;
   margin: 0 0 8px 0;
   text-transform: uppercase;
@@ -130,13 +130,13 @@
 .gallery-item h3 {
   font-size: 16px;
   margin: 0;
-  color: #333;
+  color: #1A1A2E;
   font-weight: bold;
 }
 
 /* ===== GALLERY STATS SECTION ===== */
 .gallery-stats {
-  background: linear-gradient(135deg, rgba(102,126,234,0.95) 0%, rgba(118,75,162,0.95) 100%);
+  background: linear-gradient(135deg, #1E3A5F, #2C5282);
   color: white;
   padding: 60px 40px;
   text-align: center;

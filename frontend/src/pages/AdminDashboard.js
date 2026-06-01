@@ -801,7 +801,7 @@ const AdminDashboard = () => {
                         }}
                       />
                       {serviceForm.image_url instanceof File ? (
-                        <div style={{marginTop: '10px', fontSize: '13px', color: '#6c2bff', fontWeight: '500'}}>
+                        <div style={{marginTop: '10px', fontSize: '13px', color: '#1E3A5F', fontWeight: '500'}}>
                           ✓ Selected: {serviceForm.image_url.name}
                         </div>
                       ) : typeof serviceForm.image_url === 'string' && serviceForm.image_url ? (
@@ -972,7 +972,7 @@ const AdminDashboard = () => {
                         }}
                       />
                       {staffForm.profile_image instanceof File ? (
-                        <div style={{marginTop: '10px', fontSize: '13px', color: '#6c2bff', fontWeight: '500'}}>
+                        <div style={{marginTop: '10px', fontSize: '13px', color: '#1E3A5F', fontWeight: '500'}}>
                           ✓ Selected: {staffForm.profile_image.name}
                         </div>
                       ) : typeof staffForm.profile_image === 'string' && staffForm.profile_image ? (
@@ -1359,7 +1359,7 @@ const AdminDashboard = () => {
                     {users.map(user => (
                         <div key={user.id} className={`chat-user-item ${selectedUser?.id === user.id ? 'active' : ''}`} 
                              onClick={() => setSelectedUser(user)}
-                             style={{padding: '1rem', marginBottom: '0.5rem', borderRadius: '10px', cursor: 'pointer', background: selectedUser?.id === user.id ? '#6c2bff' : 'white', color: selectedUser?.id === user.id ? 'white' : 'black', boxShadow: '0 2px 5px rgba(0,0,0,0.05)'}}>
+                             style={{padding: '1rem', marginBottom: '0.5rem', borderRadius: '10px', cursor: 'pointer', background: selectedUser?.id === user.id ? '#1E3A5F' : 'white', color: selectedUser?.id === user.id ? 'white' : '#1A1A2E', boxShadow: '0 2px 5px rgba(0,0,0,0.05)'}}>
                             <div style={{fontWeight: '600', display: 'flex', justifyContent: 'space-between'}}>
                                 {user.name}
                                 {unreadMessages[user.id] > 0 && <span style={{background: '#ff4757', color: 'white', borderRadius: '50%', padding: '2px 8px', fontSize: '0.7rem'}}>{unreadMessages[user.id]}</span>}

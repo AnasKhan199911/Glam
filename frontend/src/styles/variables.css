@@ -1,13 +1,41 @@
 :root {
-  --primary-color: #8a2be2;
-  --secondary-color: #ff69b4;
-  --accent-color: #fff;
-  --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.8);
-  --glass-bg: rgba(255, 255, 255, 0.1);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-shadow: rgba(31, 38, 135, 0.37);
-  --gradient-primary: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  --font-primary: 'Poppins', sans-serif;
+  --primary:        #1E3A5F;
+  --primary-light:  #2C5282;
+  --primary-hover:  #163052;
+  --primary-tint:   #EEF2F8;
+  --accent:         #E8A598;
+  --accent-dark:    #C4746A;
+  --accent-light:   #FFF0EE;
+
+  --bg:             #FAFAFA;
+  --card:           #FFFFFF;
+  --surface:        #F0F4F8;
+
+  --text:           #1A1A2E;
+  --text-muted:     #5A6A7A;
+
+  --border:         #D6E0EA;
+
+  --success:        #2E7D52;
+  --success-bg:     #dcfce7;
+  --warning:        #C47F17;
+  --warning-bg:     #fef3c7;
+  --danger:         #B91C1C;
+  --danger-bg:      #fee2e2;
+
+  --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-light));
+  --gradient-accent:  linear-gradient(135deg, var(--accent), var(--accent-dark));
+
+  --font-primary:   'Poppins', sans-serif;
   --font-secondary: 'Playfair Display', serif;
+
+  /* legacy aliases kept for compatibility */
+  --primary-color:  #1E3A5F;
+  --secondary-color: #E8A598;
+  --accent-color:   #FAFAFA;
+  --text-primary:   #1A1A2E;
+  --text-secondary: #5A6A7A;
+  --glass-bg:       rgba(30, 58, 95, 0.06);
+  --glass-border:   rgba(30, 58, 95, 0.15);
+  --glass-shadow:   rgba(30, 58, 95, 0.12);
 }
