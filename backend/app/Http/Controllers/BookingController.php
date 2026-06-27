@@ -263,8 +263,7 @@ class BookingController extends Controller
         $booking->save();
 
         // Notify Admin (General Info)
-        \App\Http\Controllers\NotificationController::createNotification(
-            null,
+        \App\Http\Controllers\NotificationController::createAdminNotification(
             'Reschedule Request',
             "User " . $booking->customer_name . " requested to change their booking to " . $newDate,
             'info'

@@ -126,7 +126,7 @@ const AdminDashboard = () => {
 
   const fetchAdminNotifs = async () => {
     try {
-      const resp = await axios.post('/notifications/get-admin', { admin_id: 1 });
+      const resp = await axios.post('/notifications/get-admin', { admin_id: adminUser?.id || 1 });
       if (resp.data && resp.data.success) {
         setAdminNotifs(resp.data.notifications || []);
       }
