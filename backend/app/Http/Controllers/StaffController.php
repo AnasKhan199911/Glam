@@ -110,21 +110,16 @@ class StaffController extends Controller
             return response()->json(['success' => false, 'message' => 'Staff not found'], 404);
         }
 
-        // Match bookings and reviews by exact service name = staff role (case-insensitive)
-        // or by service category = staff role (fallback)
         $role = $staff->role;
 
         $bookings = \App\Models\Booking::with(['user', 'service'])
-            ->whereHas('service', function($query) use ($role) {
-                $query->whereRaw('LOWER(name) = LOWER(?)', [$role])
-                      ->orWhereRaw('LOWER(category) = LOWER(?)', [$role]);
-            })
+            ->where('assigned_staff_id', $staffId)
             ->where('status', '!=', 'cancelled')
             ->orderBy('booking_date', 'asc')
             ->orderBy('booking_time', 'asc')
             ->get();
 
-        // Calculate average rating from matching reviews
+        // Calculate average rating from reviews for this staff's role
         $avgRating = \App\Models\Review::whereHas('service', function($query) use ($role) {
             $query->whereRaw('LOWER(name) = LOWER(?)', [$role])
                   ->orWhereRaw('LOWER(category) = LOWER(?)', [$role]);

@@ -49,6 +49,7 @@ Route::prefix('bookings')->group(function () {
     Route::post('/approve-reschedule', [BookingController::class, 'approveReschedule']);
     Route::post('/reject-reschedule', [BookingController::class, 'rejectReschedule']);
     Route::post('/delete', [BookingController::class, 'deleteBooking']);
+    Route::post('/assign-staff', [BookingController::class, 'assignStaff']);
 });
 
 Route::prefix('services')->group(function () {

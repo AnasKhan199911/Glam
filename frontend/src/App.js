@@ -26,7 +26,8 @@ function App() {
   };
 
   const ProtectedRoute = ({ children }) => {
-    if (!isLoggedIn()) return <Navigate to="/auth" replace />;
+    const hasAnyToken = localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('staffToken');
+    if (!hasAnyToken) return <Navigate to="/auth" replace />;
     return children;
   };
 

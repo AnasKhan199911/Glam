@@ -28,6 +28,7 @@ class Booking extends Model
         'reschedule_status',
         'requested_date',
         'requested_time',
+        'assigned_staff_id',
     ];
 
     public function user()

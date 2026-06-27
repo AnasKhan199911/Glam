@@ -49,6 +49,7 @@ const AdminDashboard = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
     const [unreadMessages, setUnreadMessages] = useState({}); // {userId: count}
+  const [assigningBookingId, setAssigningBookingId] = useState(null);
   const adminUser = JSON.parse(localStorage.getItem('user') || '{"id": 5, "name": "Admin"}');
 
   const fetchBookings = async () => {
@@ -265,11 +266,41 @@ const AdminDashboard = () => {
         showSuccess('Booking updated successfully');
         fetchBookings(true);
       } else {
-        showError('Failed to update booking');
+        showError(resp.data?.message || 'Failed to update booking');
       }
     } catch (err) {
-      showError('Error updating booking');
+      showError(err.response?.data?.message || 'Error updating booking');
     }
+  };
+
+  const assignStaff = async (bookingId, staffId) => {
+    try {
+      const resp = await axios.post('/bookings/assign-staff', { booking_id: bookingId, staff_id: staffId || null });
+      if (resp.data.success) {
+        showSuccess(staffId ? 'Staff assigned successfully!' : 'Assignment removed');
+        fetchBookings(true);
+        setAssigningBookingId(null);
+      } else {
+        showError(resp.data.message || 'Failed to assign staff');
+      }
+    } catch (err) {
+      showError('Error assigning staff');
+    }
+  };
+
+  const getEligibleStaff = (booking) => {
+    const service = services.find(s => s.id === booking.service_id);
+    if (!service) return staff.filter(s => s.is_active);
+    const sName = (service.name || service.service_name || '').toLowerCase();
+    const sCat = (service.category || '').toLowerCase();
+    const filtered = staff.filter(s =>
+      s.is_active &&
+      (s.role?.toLowerCase() === sName ||
+       s.role?.toLowerCase() === sCat ||
+       s.specialization?.toLowerCase().includes(sName) ||
+       s.specialization?.toLowerCase().includes(sCat))
+    );
+    return filtered.length > 0 ? filtered : staff.filter(s => s.is_active);
   };
 
   const handleApproveReschedule = async (id) => {
@@ -568,6 +599,96 @@ const AdminDashboard = () => {
     return `EMP${num.toString().padStart(3, '0')}`;
   };
 
+  const getBookingAmount = (b) => {
+    if (b.amount) return parseFloat(b.amount) || 0;
+    const svc = services.find(s => s.id === b.service_id);
+    return svc ? parseFloat(svc.price || 0) : 0;
+  };
+
+  const revenueByMonth = (() => {
+    const map = {};
+    [...bookings]
+      .sort((a, b) => new Date(b.booking_date || b.date) - new Date(a.booking_date || a.date))
+      .forEach(b => {
+        const d = new Date(b.booking_date || b.date);
+        const key = isNaN(d) ? 'Unknown Date' : d.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+        if (!map[key]) map[key] = [];
+        map[key].push(b);
+      });
+    return map;
+  })();
+
+  const totalRevenue = bookings
+    .filter(b => b.payment_status === 'paid')
+    .reduce((sum, b) => sum + getBookingAmount(b), 0);
+
+  const handlePrintRevenue = () => {
+    const pw = window.open('', '_blank');
+    const allRows = bookings.map((b, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${(b.customer_name || b.name || `User ${b.user_id}`).replace(/</g,'&lt;')}</td>
+        <td>${(serviceMap[b.service_id] || `Service ${b.service_id}`).replace(/</g,'&lt;')}</td>
+        <td>${b.booking_date || b.date || '—'}</td>
+        <td>${(b.status || 'pending').toUpperCase()}</td>
+        <td>${b.payment_status === 'paid' ? '&#10003; Paid' : 'Unpaid'}</td>
+        <td>Rs. ${getBookingAmount(b).toLocaleString()}</td>
+      </tr>`).join('');
+    pw.document.write(`<!DOCTYPE html><html><head><title>Revenue Report</title><style>
+      body{font-family:Arial,sans-serif;padding:30px;color:#1a1a2e}
+      h1{color:#1E3A5F;margin-bottom:4px}
+      p.sub{color:#64748b;margin:0 0 24px}
+      .summary{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+      .card{border:2px solid #e2e8f0;border-radius:10px;padding:14px 22px;min-width:150px}
+      .card h3{margin:0 0 4px;font-size:1.6rem;color:#1E3A5F}
+      .card p{margin:0;color:#64748b;font-size:.82rem}
+      h2{color:#2C5282;border-bottom:2px solid #1E3A5F;padding-bottom:6px;margin-top:32px}
+      table{width:100%;border-collapse:collapse;margin-top:10px}
+      th{background:#1E3A5F;color:#fff;padding:10px 8px;text-align:left;font-size:.85rem}
+      td{padding:8px;border-bottom:1px solid #e2e8f0;font-size:.85rem}
+      tr:nth-child(even){background:#f8fafc}
+      @media print{body{padding:10px}.no-print{display:none}}
+    </style></head><body>
+      <h1>Monthly Revenue Report</h1>
+      <p class="sub">Generated: ${new Date().toLocaleString()}</p>
+      <div class="summary">
+        <div class="card"><h3>Rs. ${totalRevenue.toLocaleString()}</h3><p>Total Revenue</p></div>
+        <div class="card"><h3>${bookings.length}</h3><p>Total Bookings</p></div>
+        <div class="card"><h3>${bookings.filter(b => b.payment_status === 'paid').length}</h3><p>Paid</p></div>
+        <div class="card"><h3>${bookings.filter(b => b.payment_status !== 'paid').length}</h3><p>Unpaid</p></div>
+      </div>
+      <h2>All Bookings</h2>
+      <table><thead><tr><th>#</th><th>Customer</th><th>Service</th><th>Date</th><th>Status</th><th>Payment</th><th>Amount</th></tr></thead>
+      <tbody>${allRows}</tbody></table>
+    </body></html>`);
+    pw.document.close();
+    pw.print();
+  };
+
+  const handleDownloadCSV = () => {
+    const lines = [
+      ['#', 'Customer', 'Service', 'Date', 'Status', 'Payment', 'Amount (Rs)'].join(','),
+      ...bookings.map((b, i) => [
+        i + 1,
+        `"${(b.customer_name || b.name || `User ${b.user_id}`).replace(/"/g, '""')}"`,
+        `"${(serviceMap[b.service_id] || `Service ${b.service_id}`).replace(/"/g, '""')}"`,
+        b.booking_date || b.date || '',
+        b.status || 'pending',
+        b.payment_status || 'unpaid',
+        getBookingAmount(b)
+      ].join(','))
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `revenue-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="admin-dashboard">
       {/* Dashboard Header */}
@@ -644,6 +765,9 @@ const AdminDashboard = () => {
         <button className={`tab-btn ${activeTab === 'chats' ? 'active' : ''}`} onClick={() => setActiveTab('chats')}>
           <span className="tab-icon">💬</span> Chats {Object.values(unreadMessages).reduce((a, b) => a + b, 0) > 0 && <span className="notif-badge">{Object.values(unreadMessages).reduce((a, b) => a + b, 0)}</span>}
         </button>
+        <button className={`tab-btn ${activeTab === 'revenue' ? 'active' : ''}`} onClick={() => setActiveTab('revenue')}>
+          <span className="tab-icon">💰</span> Revenue Report
+        </button>
       </div>
 
       {/* Main Content Area */}
@@ -672,6 +796,7 @@ const AdminDashboard = () => {
                       <th>Date & Time</th>
                       <th>Status</th>
                       <th>Payment</th>
+                      <th>Assigned Staff</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -712,11 +837,53 @@ const AdminDashboard = () => {
                             )}
                           </td>
                           <td>
+                            {b.status === 'confirmed' || b.status === 'completed' ? (
+                              <div style={{ minWidth: 150 }}>
+                                {b.assigned_staff_id ? (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <span style={{ background: '#dbeafe', color: '#1e40af', borderRadius: 20, padding: '3px 10px', fontSize: 12, fontWeight: 600 }}>
+                                      👤 {staff.find(s => s.id === b.assigned_staff_id)?.full_name || `Staff #${b.assigned_staff_id}`}
+                                    </span>
+                                    {b.status !== 'completed' && (
+                                      <button title="Remove assignment" onClick={() => assignStaff(b.id, null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 14, padding: 2 }}>✕</button>
+                                    )}
+                                  </div>
+                                ) : (
+                                  assigningBookingId === b.id ? (
+                                    <div style={{ position: 'relative' }}>
+                                      <select
+                                        autoFocus
+                                        style={{ padding: '4px 8px', borderRadius: 8, border: '1px solid #2C5282', fontSize: 12, width: '100%' }}
+                                        defaultValue=""
+                                        onChange={(e) => { if (e.target.value) assignStaff(b.id, parseInt(e.target.value)); }}
+                                        onBlur={() => setAssigningBookingId(null)}
+                                      >
+                                        <option value="" disabled>Select staff…</option>
+                                        {getEligibleStaff(b).map(s => (
+                                          <option key={s.id} value={s.id}>{s.full_name} ({s.role || s.specialization || '—'})</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => setAssigningBookingId(b.id)}
+                                      style={{ background: '#1E3A5F', color: '#fff', border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                    >
+                                      + Assign Staff
+                                    </button>
+                                  )
+                                )}
+                              </div>
+                            ) : (
+                              <span style={{ color: '#94a3b8', fontSize: 12 }}>Confirm first</span>
+                            )}
+                          </td>
+                          <td>
                             <div className="action-buttons">
                               {b.status !== 'confirmed' && b.status !== 'completed' && (
                                 <button className="btn-icon btn-confirm" onClick={() => adminUpdate(b.id, { status: 'confirmed' })} title="Confirm">✓</button>
                               )}
-                              {b.status !== 'completed' && (
+                              {b.status === 'confirmed' && (
                                 <button className="btn-icon btn-complete" onClick={() => adminUpdate(b.id, { status: 'completed' })} title="Complete">✔</button>
                               )}
                               <button className="btn-icon btn-edit" onClick={() => {
@@ -1383,6 +1550,110 @@ const AdminDashboard = () => {
                     )}
                 </div>
             </div>
+          </section>
+        )}
+
+        {activeTab === 'revenue' && (
+          <section className="content-section">
+            <div className="section-header">
+              <h2>Monthly Revenue Report</h2>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button className="add-btn" style={{ background: '#2C5282' }} onClick={handlePrintRevenue}>🖨️ Print Report</button>
+                <button className="add-btn" style={{ background: '#16a34a' }} onClick={handleDownloadCSV}>⬇️ Download CSV</button>
+              </div>
+            </div>
+
+            <div className="stats-grid" style={{ marginBottom: 30 }}>
+              <div className="stat-card" style={{ background: 'linear-gradient(135deg,#1E3A5F,#2C5282)', color: '#fff' }}>
+                <div className="stat-icon">💰</div>
+                <div className="stat-info">
+                  <span className="stat-value" style={{ color: '#fff' }}>Rs. {totalRevenue.toLocaleString()}</span>
+                  <span className="stat-label" style={{ color: 'rgba(255,255,255,0.8)' }}>Total Revenue</span>
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">📋</div>
+                <div className="stat-info">
+                  <span className="stat-value">{bookings.length}</span>
+                  <span className="stat-label">Total Bookings</span>
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">✅</div>
+                <div className="stat-info">
+                  <span className="stat-value">{bookings.filter(b => b.payment_status === 'paid').length}</span>
+                  <span className="stat-label">Paid</span>
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">⏳</div>
+                <div className="stat-info">
+                  <span className="stat-value">{bookings.filter(b => b.payment_status !== 'paid').length}</span>
+                  <span className="stat-label">Unpaid</span>
+                </div>
+              </div>
+            </div>
+
+            {bookings.length === 0 ? (
+              <div className="empty-state">
+                <span className="empty-icon">📊</span>
+                <p>No bookings data available</p>
+              </div>
+            ) : (
+              Object.entries(revenueByMonth).map(([month, mBookings]) => {
+                const monthRevenue = mBookings
+                  .filter(b => b.payment_status === 'paid')
+                  .reduce((s, b) => s + getBookingAmount(b), 0);
+                return (
+                  <div key={month} style={{ marginBottom: 36 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                      <h3 style={{ color: '#1E3A5F', margin: 0, fontSize: '1.1rem' }}>📅 {month}</h3>
+                      <span style={{ background: '#dcfce7', color: '#16a34a', borderRadius: 20, padding: '4px 14px', fontWeight: 700, fontSize: 13 }}>
+                        Rs. {monthRevenue.toLocaleString()} collected
+                      </span>
+                    </div>
+                    <div className="bookings-table-wrapper">
+                      <table className="admin-table">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Customer</th>
+                            <th>Service</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th>Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {mBookings.map((b, i) => (
+                            <tr key={b.id}>
+                              <td>{i + 1}</td>
+                              <td>
+                                <div className="customer-info">
+                                  <strong>{b.customer_name || b.name || `User ${b.user_id}`}</strong>
+                                  <span className="customer-email">{b.customer_email || b.email || '—'}</span>
+                                </div>
+                              </td>
+                              <td>{serviceMap[b.service_id] || `Service ${b.service_id}`}</td>
+                              <td>📅 {new Date(b.booking_date || b.date).toLocaleDateString()}</td>
+                              <td><span className={`status-badge ${b.status || 'pending'}`}>{(b.status || 'pending').toUpperCase()}</span></td>
+                              <td>
+                                {b.payment_status === 'paid'
+                                  ? <span style={{ background: '#dcfce7', color: '#16a34a', borderRadius: 20, padding: '3px 10px', fontWeight: 700, fontSize: 12 }}>✓ Paid</span>
+                                  : <span style={{ background: '#fef3c7', color: '#d97706', borderRadius: 20, padding: '3px 10px', fontWeight: 700, fontSize: 12 }}>Unpaid</span>
+                                }
+                              </td>
+                              <td><strong style={{ color: '#1E3A5F' }}>Rs. {getBookingAmount(b).toLocaleString()}</strong></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </section>
         )}
       </div>

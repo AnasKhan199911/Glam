@@ -182,6 +182,10 @@ class BookingController extends Controller
             return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
         }
 
+        if ($request->has('status') && $request->status === 'completed' && $booking->status !== 'confirmed') {
+            return response()->json(['success' => false, 'message' => 'Booking must be confirmed before it can be marked as completed'], 422);
+        }
+
         $booking->update($request->all());
 
         // Create notification for status update
@@ -342,6 +346,30 @@ class BookingController extends Controller
         $booking->delete();
 
         return response()->json(['success' => true, 'message' => 'Booking deleted successfully']);
+    }
+
+    public function assignStaff(Request $request)
+    {
+        $booking = Booking::with('service')->find($request->booking_id);
+
+        if (!$booking) {
+            return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
+        }
+
+        $booking->assigned_staff_id = $request->staff_id ?: null;
+        $booking->save();
+
+        if ($request->staff_id) {
+            \App\Http\Controllers\NotificationController::createNotification(
+                null,
+                'Booking Assigned to You',
+                "You have been assigned a booking for " . ($booking->service?->name ?? 'a service') . " on " . $booking->booking_date . " at " . $booking->booking_time,
+                'info',
+                $request->staff_id
+            );
+        }
+
+        return response()->json(['success' => true, 'message' => 'Staff assigned successfully']);
     }
 
     // Helper to avoid code duplication

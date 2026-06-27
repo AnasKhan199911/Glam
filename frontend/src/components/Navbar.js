@@ -177,8 +177,8 @@ const Navbar = () => {
                     📊 Dashboard
                   </button>
                 )}
-                {!localStorage.getItem('staffToken') && (
-                  <button 
+                {!localStorage.getItem('staffToken') && !localStorage.getItem('adminToken') && (
+                  <button
                     className="dropdown-item"
                     onClick={handleProfileClick}
                   >
