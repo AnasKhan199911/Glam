@@ -26,7 +26,9 @@ class Staff extends Model
         'total_services',
         'is_active',
         'is_online',
-        'password'
+        'password',
+        'login_otp',
+        'login_otp_expires',
     ];
 
     protected $hidden = [

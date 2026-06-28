@@ -27,10 +27,12 @@ Route::prefix('auth')->group(function () {
     Route::post('/reset-password', [AuthController::class, 'resetPasswordWithOtp']);
     Route::post('/get-users', [AuthController::class, 'getUsers']);
     Route::post('/delete-user', [AuthController::class, 'deleteUser']);
+    Route::post('/get-admin-id', [AuthController::class, 'getAdminId']);
 });
 
 Route::prefix('staff')->group(function () {
     Route::post('/login', [StaffController::class, 'login']);
+    Route::post('/verify-otp', [StaffController::class, 'verifyOtp']);
     Route::post('/dashboard-data', [StaffController::class, 'getDashboardData']);
     Route::post('/get-all', [StaffController::class, 'index']);
     Route::post('/create', [StaffController::class, 'store']);

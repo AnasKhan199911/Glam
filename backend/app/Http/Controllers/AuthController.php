@@ -306,6 +306,15 @@ class AuthController extends Controller
         return response()->json(['success' => false, 'message' => 'User not found'], 404);
     }
 
+    public function getAdminId()
+    {
+        $admin = User::whereIn('role', ['admin', 'super_admin'])->first();
+        if (!$admin) {
+            $admin = User::where('email', 'admin@glamconnect.com')->first();
+        }
+        return response()->json(['success' => true, 'admin_id' => $admin?->id ?? 5]);
+    }
+
     public function getStaff()
     {
         // This is a placeholder since staff management might be in a separate table or just role='staff' in users table.

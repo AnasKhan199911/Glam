@@ -50,6 +50,7 @@ const AdminDashboard = () => {
   const [selectedUser, setSelectedUser] = useState(null);
     const [unreadMessages, setUnreadMessages] = useState({}); // {userId: count}
   const [assigningBookingId, setAssigningBookingId] = useState(null);
+  const [confirmPassword, setConfirmPassword] = useState('');
   const adminUser = JSON.parse(localStorage.getItem('user') || '{"id": 5, "name": "Admin"}');
 
   const fetchBookings = async () => {
@@ -461,9 +462,31 @@ const AdminDashboard = () => {
   // Staff handlers
   const handleSaveStaff = async (e) => {
     e.preventDefault();
-    if (!staffForm.full_name || !staffForm.email || !staffForm.phone) {
-      showWarning('Name, email, and phone are required.');
-      return;
+    if (!staffForm.full_name || staffForm.full_name.trim().length < 2) {
+      showWarning('Full name must be at least 2 characters.'); return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!staffForm.email || !emailRegex.test(staffForm.email)) {
+      showWarning('Please enter a valid email address.'); return;
+    }
+    const phoneRegex = /^[0-9]{11}$/;
+    if (!staffForm.phone || !phoneRegex.test(staffForm.phone)) {
+      showWarning('Phone number must be exactly 11 digits (numbers only).'); return;
+    }
+    if (!editingStaffId) {
+      if (!staffForm.password || staffForm.password.length < 6) {
+        showWarning('Password must be at least 6 characters.'); return;
+      }
+      if (staffForm.password !== confirmPassword) {
+        showWarning('Passwords do not match.'); return;
+      }
+    } else if (staffForm.password) {
+      if (staffForm.password.length < 6) {
+        showWarning('New password must be at least 6 characters.'); return;
+      }
+      if (staffForm.password !== confirmPassword) {
+        showWarning('Passwords do not match.'); return;
+      }
     }
 
     try {
@@ -577,6 +600,7 @@ const AdminDashboard = () => {
       password: '',
       profile_image: null 
     });
+    setConfirmPassword('');
     setEditingStaffId(null);
     setShowStaffForm(false);
   };
@@ -1080,22 +1104,22 @@ const AdminDashboard = () => {
                     </div>
                     <div className="form-group">
                       <label>Password {editingStaffId ? '(Leave blank to stay same)' : '*'}</label>
-                      <input 
-                        type="password" 
-                        value={staffForm.password} 
-                        onChange={(e) => setStaffForm({...staffForm, password: e.target.value})} 
-                        placeholder={editingStaffId ? "••••••••" : "Enter password"} 
-                        required={!editingStaffId} 
+                      <input
+                        type="password"
+                        value={staffForm.password}
+                        onChange={(e) => setStaffForm({...staffForm, password: e.target.value})}
+                        placeholder={editingStaffId ? "••••••••" : "Min 6 characters"}
+                        required={!editingStaffId}
                       />
                     </div>
                     <div className="form-group">
-                      <label>Password {editingStaffId ? '(Leave blank to stay same)' : '*'}</label>
-                      <input 
-                        type="password" 
-                        value={staffForm.password} 
-                        onChange={(e) => setStaffForm({...staffForm, password: e.target.value})} 
-                        placeholder={editingStaffId ? "••••••••" : "Enter password"} 
-                        required={!editingStaffId} 
+                      <label>Confirm Password {editingStaffId ? '(Leave blank to stay same)' : '*'}</label>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Re-enter password"
+                        required={!editingStaffId}
                       />
                     </div>
                     <div className="form-group">

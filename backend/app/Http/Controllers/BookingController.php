@@ -285,11 +285,10 @@ class BookingController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid request'], 400);
         }
 
-        // Apply changes
+        // Apply date/time change only — status stays unchanged (payment still required for confirmation)
         $booking->booking_date = $booking->requested_date;
         $booking->booking_time = $booking->requested_time;
         $booking->reschedule_status = 'approved';
-        $booking->status = 'confirmed'; // Auto-confirm on approval
         $booking->save();
 
         // Notify User
